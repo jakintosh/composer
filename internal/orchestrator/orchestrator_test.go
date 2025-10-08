@@ -305,3 +305,282 @@ func TestFindRunnableStepsWithMultipleInputs(t *testing.T) {
 		t.Errorf("Expected only c to be runnable, got %v", runnable)
 	}
 }
+
+func TestHumanHandlerStep(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	wf := &workflow.Workflow{
+		ID: "test",
+		Steps: []workflow.Step{
+			{Name: "automated", Handler: "tool", Output: "auto-out"},
+			{Name: "manual", Handler: "human", Prompt: "Please review the data", Inputs: []string{"auto-out"}, Output: "manual-out"},
+		},
+	}
+
+	runName := "test-run"
+	CreateRun(wf, runName)
+
+	// First tick: automated step runs
+	complete, err := Tick(wf, runName)
+	if err != nil {
+		t.Fatalf("First tick failed: %v", err)
+	}
+	if complete {
+		t.Error("Workflow should not be complete after first tick")
+	}
+
+	state, _ := workflow.LoadState(runName)
+	if state.StepStates["automated"].Status != workflow.StatusSucceeded {
+		t.Error("Automated step should be succeeded")
+	}
+
+	// Second tick: human step should transition to ready, not succeed
+	complete, err = Tick(wf, runName)
+	if err != nil {
+		t.Fatalf("Second tick failed: %v", err)
+	}
+	if complete {
+		t.Error("Workflow should not be complete with ready task")
+	}
+
+	state, _ = workflow.LoadState(runName)
+	if state.StepStates["manual"].Status != workflow.StatusReady {
+		t.Errorf("Manual step should be ready, got %s", state.StepStates["manual"].Status)
+	}
+
+	// Manual step output should not be added yet
+	if state.HasOutput("manual-out") {
+		t.Error("Manual step output should not be added until completed")
+	}
+}
+
+func TestListWaitingTasks(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	wf := &workflow.Workflow{
+		ID: "test",
+		Steps: []workflow.Step{
+			{Name: "auto1", Handler: "tool", Output: "out1"},
+			{Name: "manual1", Handler: "human", Prompt: "Review data 1", Inputs: []string{"out1"}, Output: "out2"},
+			{Name: "manual2", Handler: "human", Prompt: "Review data 2", Inputs: []string{"out1"}, Output: "out3"},
+			{Name: "auto2", Handler: "tool", Inputs: []string{"out2", "out3"}, Output: "out4"},
+		},
+	}
+
+	runName := "test-run"
+	CreateRun(wf, runName)
+
+	// Initially no tasks waiting
+	tasks, err := ListWaitingTasks(wf, runName)
+	if err != nil {
+		t.Fatalf("ListWaitingTasks failed: %v", err)
+	}
+	if len(tasks) != 0 {
+		t.Errorf("Expected 0 waiting tasks initially, got %d", len(tasks))
+	}
+
+	// After first tick, auto1 completes
+	Tick(wf, runName)
+
+	// After second tick, both manual tasks should be ready
+	Tick(wf, runName)
+
+	tasks, err = ListWaitingTasks(wf, runName)
+	if err != nil {
+		t.Fatalf("ListWaitingTasks failed: %v", err)
+	}
+	if len(tasks) != 2 {
+		t.Errorf("Expected 2 waiting tasks, got %d", len(tasks))
+	}
+
+	// Verify task details
+	if tasks[0].Name != "manual1" && tasks[1].Name != "manual1" {
+		t.Error("manual1 should be in waiting tasks")
+	}
+	if tasks[0].Name != "manual2" && tasks[1].Name != "manual2" {
+		t.Error("manual2 should be in waiting tasks")
+	}
+
+	// Find manual1 task
+	var manual1Task WaitingTask
+	for _, task := range tasks {
+		if task.Name == "manual1" {
+			manual1Task = task
+			break
+		}
+	}
+
+	if manual1Task.Prompt != "Review data 1" {
+		t.Errorf("Expected prompt 'Review data 1', got '%s'", manual1Task.Prompt)
+	}
+	if len(manual1Task.Inputs) != 1 || manual1Task.Inputs[0] != "out1" {
+		t.Errorf("Expected inputs [out1], got %v", manual1Task.Inputs)
+	}
+	if manual1Task.Output != "out2" {
+		t.Errorf("Expected output 'out2', got '%s'", manual1Task.Output)
+	}
+}
+
+func TestCompleteTask(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	wf := &workflow.Workflow{
+		ID: "test",
+		Steps: []workflow.Step{
+			{Name: "auto", Handler: "tool", Output: "out1"},
+			{Name: "manual1", Handler: "human", Prompt: "Task 1", Inputs: []string{"out1"}, Output: "out2"},
+			{Name: "manual2", Handler: "human", Prompt: "Task 2", Inputs: []string{"out1"}, Output: "out3"},
+			{Name: "final", Handler: "tool", Inputs: []string{"out2", "out3"}, Output: "out4"},
+		},
+	}
+
+	runName := "test-run"
+	CreateRun(wf, runName)
+
+	// Run until both manual tasks are ready
+	Tick(wf, runName) // auto completes
+	Tick(wf, runName) // manual tasks become ready
+
+	// Complete task at index 0
+	err := CompleteTask(wf, runName, 0)
+	if err != nil {
+		t.Fatalf("CompleteTask failed: %v", err)
+	}
+
+	// Verify the task is now succeeded
+	state, _ := workflow.LoadState(runName)
+	tasks, _ := ListWaitingTasks(wf, runName)
+
+	// One task should still be waiting
+	if len(tasks) != 1 {
+		t.Errorf("Expected 1 waiting task after completing one, got %d", len(tasks))
+	}
+
+	// The completed task should be succeeded
+	taskNames := []string{"manual1", "manual2"}
+	succeededCount := 0
+	for _, name := range taskNames {
+		if state.StepStates[name].Status == workflow.StatusSucceeded {
+			succeededCount++
+			// Should have the output
+			expectedOutput := "out2"
+			if name == "manual2" {
+				expectedOutput = "out3"
+			}
+			if !state.HasOutput(expectedOutput) {
+				t.Errorf("Should have output %s after completing %s", expectedOutput, name)
+			}
+		}
+	}
+
+	if succeededCount != 1 {
+		t.Errorf("Expected 1 succeeded manual task, got %d", succeededCount)
+	}
+}
+
+func TestCompleteTaskInvalidIndex(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	wf := &workflow.Workflow{
+		ID: "test",
+		Steps: []workflow.Step{
+			{Name: "manual", Handler: "human", Prompt: "Task", Output: "out"},
+		},
+	}
+
+	runName := "test-run"
+	CreateRun(wf, runName)
+	Tick(wf, runName) // Make manual task ready
+
+	// Try to complete with invalid index
+	err := CompleteTask(wf, runName, 5)
+	if err == nil {
+		t.Error("Expected error for invalid task index")
+	}
+}
+
+func TestMixedHandlerWorkflow(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	wf := &workflow.Workflow{
+		ID: "test",
+		Steps: []workflow.Step{
+			{Name: "fetch", Handler: "tool", Output: "data"},
+			{Name: "review", Handler: "human", Prompt: "Review the data", Inputs: []string{"data"}, Output: "reviewed"},
+			{Name: "process", Handler: "tool", Inputs: []string{"reviewed"}, Output: "processed"},
+		},
+	}
+
+	runName := "test-run"
+	CreateRun(wf, runName)
+
+	// First tick: fetch runs and completes
+	complete, _ := Tick(wf, runName)
+	if complete {
+		t.Error("Should not be complete after first tick")
+	}
+
+	state, _ := workflow.LoadState(runName)
+	if state.StepStates["fetch"].Status != workflow.StatusSucceeded {
+		t.Error("fetch should be succeeded")
+	}
+
+	// Second tick: review becomes ready
+	complete, _ = Tick(wf, runName)
+	if complete {
+		t.Error("Should not be complete with ready task")
+	}
+
+	state, _ = workflow.LoadState(runName)
+	if state.StepStates["review"].Status != workflow.StatusReady {
+		t.Error("review should be ready")
+	}
+	if state.StepStates["process"].Status != workflow.StatusPending {
+		t.Error("process should still be pending")
+	}
+
+	// Complete the review task
+	CompleteTask(wf, runName, 0)
+
+	// Third tick: process runs
+	complete, _ = Tick(wf, runName)
+	if !complete {
+		t.Error("Should be complete after processing")
+	}
+
+	state, _ = workflow.LoadState(runName)
+	if state.StepStates["process"].Status != workflow.StatusSucceeded {
+		t.Error("process should be succeeded")
+	}
+}
+
+func TestDefaultHandlerIsTool(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	wf := &workflow.Workflow{
+		ID: "test",
+		Steps: []workflow.Step{
+			{Name: "step", Output: "out"}, // No handler specified
+		},
+	}
+
+	runName := "test-run"
+	CreateRun(wf, runName)
+
+	// Should auto-execute like a tool handler
+	complete, _ := Tick(wf, runName)
+	if !complete {
+		t.Error("Should be complete - default handler should be tool")
+	}
+
+	state, _ := workflow.LoadState(runName)
+	if state.StepStates["step"].Status != workflow.StatusSucceeded {
+		t.Error("Step with no handler should auto-execute (default to tool)")
+	}
+}

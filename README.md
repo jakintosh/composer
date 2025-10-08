@@ -29,22 +29,42 @@ name = "process-data"
 description = "Process the raw data"
 inputs = ["raw-data"]
 output = "processed-data"
+
+[[steps]]
+name = "review-quality"
+handler = "human"
+description = "Review data quality"
+prompt = "Check the processed data for anomalies and approve if it looks good"
+inputs = ["processed-data"]
+output = "reviewed-data"
 ```
 
 ### Steps
 Steps are the individual units of work in a workflow:
 - **Name**: Unique identifier for the step
 - **Description**: Human-readable description
+- **Handler**: Who executes the step - `"tool"` (default, automated) or `"human"` (requires intervention)
+- **Prompt**: Instructions for human handlers (optional)
 - **Inputs**: List of required outputs from other steps (optional)
 - **Output**: Name of the output this step produces
 
 Steps with no inputs can run immediately. Steps with inputs wait until all required outputs are available.
 
+**Handler Types:**
+- **tool** (default): Automated steps that execute immediately when dependencies are met
+- **human**: Steps requiring human intervention; transition to "ready" status and must be completed via the `do` command
+
 ### Runs
 A run is an instantiated workflow with state. When you execute a workflow, Composer creates a run directory at `.composer/runs/{run-name}/` (relative to your current directory) that tracks:
 - **Workflow name**: Which workflow this run executes
-- **Step states**: Status of each step (`pending`, `succeeded`, `failed`)
+- **Step states**: Status of each step (`pending`, `ready`, `succeeded`, `failed`)
 - **Outputs**: List of outputs that have been produced
+
+**Step Statuses:**
+- **pending**: Waiting for input dependencies
+- **ready**: Human-handler step with dependencies met, awaiting intervention
+- **succeeded**: Step completed successfully
+- **failed**: Step failed (not yet implemented)
 
 State is persisted as JSON between ticks, allowing you to stop and resume execution.
 
@@ -82,7 +102,21 @@ This loads a workflow, creates a new run with initial state, and executes the fi
 ./bin/composer tick <run-name>
 ```
 
-Executes one tick: finds all runnable steps (those with satisfied inputs), runs them in parallel, updates state, and saves.
+Executes one tick: finds all runnable steps (those with satisfied inputs), runs tool steps in parallel, transitions human steps to "ready" status, updates state, and saves.
+
+### List waiting tasks
+```bash
+./bin/composer tasks <run-name>
+```
+
+Lists all tasks with "ready" status that are waiting for human intervention. Each task is shown with an index, description, prompt (if provided), inputs, and output.
+
+### Complete a waiting task
+```bash
+./bin/composer do <run-name> <task-index>
+```
+
+Marks a waiting task as completed, adding its output to the run state. Use the task index from the `tasks` command.
 
 ### Example
 ```bash
@@ -93,6 +127,24 @@ Executes one tick: finds all runnable steps (those with satisfied inputs), runs 
 ./bin/composer tick my-first-run
 ./bin/composer tick my-first-run
 # ... repeat until "Workflow complete!" appears
+```
+
+### Example with Human Tasks
+```bash
+# Run a workflow with human intervention steps
+./bin/composer run review-workflow my-review
+
+# Tick until a human task is ready
+./bin/composer tick my-review
+
+# List waiting tasks
+./bin/composer tasks my-review
+
+# Complete task at index 0
+./bin/composer do my-review 0
+
+# Continue workflow
+./bin/composer tick my-review
 ```
 
 ## Runtime Directories
@@ -116,8 +168,10 @@ This is an early-stage project. Current functionality:
 - Tick-based execution with dependency resolution
 - Parallel step execution when dependencies allow
 - State persistence between ticks
+- Human intervention steps that pause workflow execution
+- Task listing and completion via CLI
 
-Steps currently just print their execution (no actual work performed yet).
+Tool handler steps currently just print their execution (no actual work performed yet). Human handler steps require manual completion via the `do` command.
 
 ## Architecture Notes
 

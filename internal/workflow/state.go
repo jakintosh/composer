@@ -13,6 +13,7 @@ type StepStatus string
 
 const (
 	StatusPending   StepStatus = "pending"
+	StatusReady     StepStatus = "ready"
 	StatusFailed    StepStatus = "failed"
 	StatusSucceeded StepStatus = "succeeded"
 )
@@ -105,7 +106,7 @@ func (rs *RunState) AddOutput(output string) {
 // AllStepsCompleted checks if all steps are either succeeded or failed
 func (rs *RunState) AllStepsCompleted() bool {
 	for _, state := range rs.StepStates {
-		if state.Status == StatusPending {
+		if state.Status == StatusPending || state.Status == StatusReady {
 			return false
 		}
 	}

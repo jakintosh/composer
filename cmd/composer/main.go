@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"composer/internal/orchestrator"
 	"composer/internal/workflow"
@@ -34,6 +35,23 @@ func main() {
 		}
 		runName := os.Args[2]
 		tickWorkflow(runName)
+	case "tasks":
+		if len(os.Args) < 3 {
+			fmt.Fprintf(os.Stderr, "Error: run name is required\n\n")
+			printUsage()
+			os.Exit(1)
+		}
+		runName := os.Args[2]
+		listTasks(runName)
+	case "do":
+		if len(os.Args) < 4 {
+			fmt.Fprintf(os.Stderr, "Error: run name and task index are required\n\n")
+			printUsage()
+			os.Exit(1)
+		}
+		runName := os.Args[2]
+		taskIndex := os.Args[3]
+		doTask(runName, taskIndex)
 	default:
 		fmt.Fprintf(os.Stderr, "Error: unknown command '%s'\n\n", command)
 		printUsage()
@@ -47,6 +65,8 @@ func printUsage() {
 	fmt.Println("Commands:")
 	fmt.Println("  run <workflow-name> <run-name>    Create and start a workflow run")
 	fmt.Println("  tick <run-name>                    Execute one tick of a workflow run")
+	fmt.Println("  tasks <run-name>                   List waiting tasks for human intervention")
+	fmt.Println("  do <run-name> <task-index>         Complete a waiting task")
 }
 
 func runWorkflow(workflowName, runName string) {
@@ -122,4 +142,80 @@ func tickWorkflow(runName string) {
 	} else {
 		fmt.Printf("Tick complete. Run 'composer tick %s' to continue.\n", runName)
 	}
+}
+
+func listTasks(runName string) {
+	// Load the run state to get the workflow name
+	state, err := workflow.LoadState(runName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading run state: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Make sure the run '%s' exists.\n", runName)
+		os.Exit(1)
+	}
+
+	// Load the workflow
+	wf, _, err := workflow.LoadWorkflow(state.WorkflowName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading workflow '%s': %v\n", state.WorkflowName, err)
+		os.Exit(1)
+	}
+
+	// Get waiting tasks
+	tasks, err := orchestrator.ListWaitingTasks(wf, runName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error listing tasks: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(tasks) == 0 {
+		fmt.Println("No tasks waiting for intervention.")
+		return
+	}
+
+	fmt.Printf("Tasks waiting for intervention (%d):\n\n", len(tasks))
+	for i, task := range tasks {
+		fmt.Printf("[%d] %s\n", i, task.Name)
+		fmt.Printf("    Description: %s\n", task.Description)
+		if task.Prompt != "" {
+			fmt.Printf("    Prompt: %s\n", task.Prompt)
+		}
+		if len(task.Inputs) > 0 {
+			fmt.Printf("    Inputs: %v\n", task.Inputs)
+		}
+		fmt.Printf("    Output: %s\n", task.Output)
+		fmt.Println()
+	}
+}
+
+func doTask(runName, taskIndexStr string) {
+	// Parse task index
+	taskIndex, err := strconv.Atoi(taskIndexStr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: invalid task index '%s'\n", taskIndexStr)
+		os.Exit(1)
+	}
+
+	// Load the run state to get the workflow name
+	state, err := workflow.LoadState(runName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading run state: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Make sure the run '%s' exists.\n", runName)
+		os.Exit(1)
+	}
+
+	// Load the workflow
+	wf, _, err := workflow.LoadWorkflow(state.WorkflowName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading workflow '%s': %v\n", state.WorkflowName, err)
+		os.Exit(1)
+	}
+
+	// Complete the task
+	if err := orchestrator.CompleteTask(wf, runName, taskIndex); err != nil {
+		fmt.Fprintf(os.Stderr, "Error completing task: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Task %d completed successfully.\n", taskIndex)
+	fmt.Printf("Run 'composer tick %s' to continue the workflow.\n", runName)
 }

@@ -4,6 +4,8 @@ package workflow
 type Step struct {
 	Name        string   `toml:"name"`
 	Description string   `toml:"description"`
+	Handler     string   `toml:"handler"` // "tool" (default), "human"
+	Prompt      string   `toml:"prompt"`  // Instructions for cognitive handlers
 	Inputs      []string `toml:"inputs"`
 	Output      string   `toml:"output"`
 }
