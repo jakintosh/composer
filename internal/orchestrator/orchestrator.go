@@ -19,10 +19,10 @@ type WaitingTask struct {
 // CreateRun initializes a new workflow run with the given name
 func CreateRun(wf *workflow.Workflow, runName string) error {
 	// Create initial state
-	state := workflow.NewRunState(wf)
+	state := workflow.NewRunState(wf, runName)
 
 	// Save the initial state
-	if err := workflow.SaveState(runName, state); err != nil {
+	if err := state.Save(); err != nil {
 		return fmt.Errorf("failed to save initial state: %w", err)
 	}
 
@@ -43,7 +43,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 	}
 
 	// Find all runnable steps
-	runnableSteps := findRunnableSteps(wf, state, runName)
+	runnableSteps := findRunnableSteps(wf, state)
 
 	if len(runnableSteps) == 0 {
 		// No steps can run, but workflow isn't complete
@@ -92,7 +92,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 			var content string
 			if len(s.Inputs) > 0 {
 				// Load and concatenate input artifacts
-				artifacts, err := workflow.ReadArtifacts(runName, s.Inputs)
+				artifacts, err := state.ReadArtifacts(s.Inputs)
 				if err != nil {
 					mu.Lock()
 					errors = append(errors, fmt.Errorf("failed to read input artifacts for %s: %w", s.Name, err))
@@ -110,7 +110,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 			}
 
 			// Write output artifact
-			if err := workflow.WriteArtifact(runName, s.Output, content); err != nil {
+			if err := state.WriteArtifact(s.Output, content); err != nil {
 				mu.Lock()
 				errors = append(errors, fmt.Errorf("failed to write artifact for %s: %w", s.Name, err))
 				mu.Unlock()
@@ -137,7 +137,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 	}
 
 	// Save updated state
-	if err := workflow.SaveState(runName, state); err != nil {
+	if err := state.Save(); err != nil {
 		return false, fmt.Errorf("failed to save state: %w", err)
 	}
 
@@ -146,7 +146,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 }
 
 // findRunnableSteps returns all steps that can be run based on current state
-func findRunnableSteps(wf *workflow.Workflow, state *workflow.RunState, runName string) []workflow.Step {
+func findRunnableSteps(wf *workflow.Workflow, state *workflow.RunState) []workflow.Step {
 	runnable := []workflow.Step{}
 
 	for _, step := range wf.Steps {
@@ -159,7 +159,7 @@ func findRunnableSteps(wf *workflow.Workflow, state *workflow.RunState, runName 
 		// Check if all inputs are satisfied
 		canRun := true
 		for _, input := range step.Inputs {
-			if !workflow.HasArtifact(runName, input) {
+			if !state.HasArtifact(input) {
 				canRun = false
 				break
 			}
@@ -240,7 +240,7 @@ func CompleteTask(wf *workflow.Workflow, runName string, taskIndex int) error {
 	var content string
 	if len(step.Inputs) > 0 {
 		// Load and concatenate input artifacts
-		artifacts, err := workflow.ReadArtifacts(runName, step.Inputs)
+		artifacts, err := state.ReadArtifacts(step.Inputs)
 		if err != nil {
 			return fmt.Errorf("failed to read input artifacts: %w", err)
 		}
@@ -255,7 +255,7 @@ func CompleteTask(wf *workflow.Workflow, runName string, taskIndex int) error {
 	}
 
 	// Write output artifact
-	if err := workflow.WriteArtifact(runName, step.Output, content); err != nil {
+	if err := state.WriteArtifact(step.Output, content); err != nil {
 		return fmt.Errorf("failed to write artifact: %w", err)
 	}
 
@@ -265,7 +265,7 @@ func CompleteTask(wf *workflow.Workflow, runName string, taskIndex int) error {
 	}
 
 	// Save state
-	if err := workflow.SaveState(runName, state); err != nil {
+	if err := state.Save(); err != nil {
 		return fmt.Errorf("failed to save state: %w", err)
 	}
 
