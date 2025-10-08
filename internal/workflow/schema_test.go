@@ -56,6 +56,21 @@ output = "combined"
 				Output:      "combined",
 			},
 		},
+		{
+			name: "step with inline content",
+			toml: `
+name = "init"
+description = "Initialize with content"
+content = "This is initial content"
+output = "initialized"
+`,
+			expected: Step{
+				Name:        "init",
+				Description: "Initialize with content",
+				Content:     "This is initial content",
+				Output:      "initialized",
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -71,6 +86,9 @@ output = "combined"
 			}
 			if step.Description != tt.expected.Description {
 				t.Errorf("Description = %v, want %v", step.Description, tt.expected.Description)
+			}
+			if step.Content != tt.expected.Content {
+				t.Errorf("Content = %v, want %v", step.Content, tt.expected.Content)
 			}
 			if step.Output != tt.expected.Output {
 				t.Errorf("Output = %v, want %v", step.Output, tt.expected.Output)

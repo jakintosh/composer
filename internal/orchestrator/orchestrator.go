@@ -43,7 +43,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 	}
 
 	// Find all runnable steps
-	runnableSteps := findRunnableSteps(wf, state)
+	runnableSteps := findRunnableSteps(wf, state, runName)
 
 	if len(runnableSteps) == 0 {
 		// No steps can run, but workflow isn't complete
@@ -79,7 +79,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 		go func(s workflow.Step) {
 			defer wg.Done()
 
-			// For now, just print that we're running the step
+			// Print step execution info
 			fmt.Printf("Running step: %s\n", s.Name)
 			fmt.Printf("  Description: %s\n", s.Description)
 			if len(s.Inputs) > 0 {
@@ -88,12 +88,40 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 			fmt.Printf("  Output: %s\n", s.Output)
 			fmt.Println()
 
-			// Update state with success and add output
+			// Prepare content for the artifact
+			var content string
+			if len(s.Inputs) > 0 {
+				// Load and concatenate input artifacts
+				artifacts, err := workflow.ReadArtifacts(runName, s.Inputs)
+				if err != nil {
+					mu.Lock()
+					errors = append(errors, fmt.Errorf("failed to read input artifacts for %s: %w", s.Name, err))
+					mu.Unlock()
+					return
+				}
+
+				// Concatenate artifacts in order
+				for _, inputName := range s.Inputs {
+					content += artifacts[inputName]
+				}
+			} else {
+				// Use inline content for steps with no inputs
+				content = s.Content
+			}
+
+			// Write output artifact
+			if err := workflow.WriteArtifact(runName, s.Output, content); err != nil {
+				mu.Lock()
+				errors = append(errors, fmt.Errorf("failed to write artifact for %s: %w", s.Name, err))
+				mu.Unlock()
+				return
+			}
+
+			// Update state with success
 			mu.Lock()
 			state.StepStates[s.Name] = workflow.StepState{
 				Status: workflow.StatusSucceeded,
 			}
-			state.AddOutput(s.Output)
 			mu.Unlock()
 		}(step)
 	}
@@ -118,7 +146,7 @@ func Tick(wf *workflow.Workflow, runName string) (bool, error) {
 }
 
 // findRunnableSteps returns all steps that can be run based on current state
-func findRunnableSteps(wf *workflow.Workflow, state *workflow.RunState) []workflow.Step {
+func findRunnableSteps(wf *workflow.Workflow, state *workflow.RunState, runName string) []workflow.Step {
 	runnable := []workflow.Step{}
 
 	for _, step := range wf.Steps {
@@ -131,7 +159,7 @@ func findRunnableSteps(wf *workflow.Workflow, state *workflow.RunState) []workfl
 		// Check if all inputs are satisfied
 		canRun := true
 		for _, input := range step.Inputs {
-			if !state.HasOutput(input) {
+			if !workflow.HasArtifact(runName, input) {
 				canRun = false
 				break
 			}
@@ -196,13 +224,45 @@ func CompleteTask(wf *workflow.Workflow, runName string, taskIndex int) error {
 	// Get the task to complete
 	task := tasks[taskIndex]
 
+	// Find the step in the workflow to get its inputs and content
+	var step *workflow.Step
+	for _, s := range wf.Steps {
+		if s.Name == task.Name {
+			step = &s
+			break
+		}
+	}
+	if step == nil {
+		return fmt.Errorf("step %s not found in workflow", task.Name)
+	}
+
+	// Prepare content for the artifact
+	var content string
+	if len(step.Inputs) > 0 {
+		// Load and concatenate input artifacts
+		artifacts, err := workflow.ReadArtifacts(runName, step.Inputs)
+		if err != nil {
+			return fmt.Errorf("failed to read input artifacts: %w", err)
+		}
+
+		// Concatenate artifacts in order
+		for _, inputName := range step.Inputs {
+			content += artifacts[inputName]
+		}
+	} else {
+		// Use inline content for steps with no inputs
+		content = step.Content
+	}
+
+	// Write output artifact
+	if err := workflow.WriteArtifact(runName, step.Output, content); err != nil {
+		return fmt.Errorf("failed to write artifact: %w", err)
+	}
+
 	// Mark step as succeeded
 	state.StepStates[task.Name] = workflow.StepState{
 		Status: workflow.StatusSucceeded,
 	}
-
-	// Add output
-	state.AddOutput(task.Output)
 
 	// Save state
 	if err := workflow.SaveState(runName, state); err != nil {

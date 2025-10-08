@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 )
 
 // StepStatus represents the status of a step in a workflow
@@ -29,8 +28,6 @@ type RunState struct {
 	WorkflowName string `json:"workflow_name"`
 	// StepStates maps step names to their current state
 	StepStates map[string]StepState `json:"step_states"`
-	// Outputs is a list of all outputs that have been produced
-	Outputs []string `json:"outputs"`
 }
 
 // NewRunState creates a new run state initialized with pending steps
@@ -38,7 +35,6 @@ func NewRunState(workflow *Workflow) *RunState {
 	state := &RunState{
 		WorkflowName: workflow.ID,
 		StepStates:   make(map[string]StepState),
-		Outputs:      []string{},
 	}
 
 	// Initialize all steps as pending
@@ -89,18 +85,6 @@ func LoadState(runName string) (*RunState, error) {
 	}
 
 	return &state, nil
-}
-
-// HasOutput checks if a specific output is in the outputs list
-func (rs *RunState) HasOutput(output string) bool {
-	return slices.Contains(rs.Outputs, output)
-}
-
-// AddOutput adds an output to the outputs list if it doesn't already exist
-func (rs *RunState) AddOutput(output string) {
-	if !rs.HasOutput(output) {
-		rs.Outputs = append(rs.Outputs, output)
-	}
 }
 
 // AllStepsCompleted checks if all steps are either succeeded or failed

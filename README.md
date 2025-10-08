@@ -22,6 +22,7 @@ description = "Fetch, process, and validate data"
 [[steps]]
 name = "fetch-data"
 description = "Fetch data from source"
+content = "Sample data from external API"
 output = "raw-data"
 
 [[steps]]
@@ -45,10 +46,11 @@ Steps are the individual units of work in a workflow:
 - **Description**: Human-readable description
 - **Handler**: Who executes the step - `"tool"` (default, automated) or `"human"` (requires intervention)
 - **Prompt**: Instructions for human handlers (optional)
-- **Inputs**: List of required outputs from other steps (optional)
-- **Output**: Name of the output this step produces
+- **Content**: Inline content for steps with no inputs (optional)
+- **Inputs**: List of required artifact names from other steps (optional)
+- **Output**: Name of the artifact this step produces
 
-Steps with no inputs can run immediately. Steps with inputs wait until all required outputs are available.
+Steps with no inputs can run immediately. Steps with inputs wait until all required artifacts are available.
 
 **Handler Types:**
 - **tool** (default): Automated steps that execute immediately when dependencies are met
@@ -58,7 +60,7 @@ Steps with no inputs can run immediately. Steps with inputs wait until all requi
 A run is an instantiated workflow with state. When you execute a workflow, Composer creates a run directory at `.composer/runs/{run-name}/` (relative to your current directory) that tracks:
 - **Workflow name**: Which workflow this run executes
 - **Step states**: Status of each step (`pending`, `ready`, `succeeded`, `failed`)
-- **Outputs**: List of outputs that have been produced
+- **Artifacts**: Document files produced by completed steps (stored in `artifacts/` subdirectory)
 
 **Step Statuses:**
 - **pending**: Waiting for input dependencies
@@ -67,6 +69,17 @@ A run is an instantiated workflow with state. When you execute a workflow, Compo
 - **failed**: Step failed (not yet implemented)
 
 State is persisted as JSON between ticks, allowing you to stop and resume execution.
+
+### Artifacts
+Artifacts are the document outputs produced by steps. When a step completes successfully, it creates an artifact file in `.composer/runs/{run-name}/artifacts/` with the name specified in the step's `output` field.
+
+**How Artifacts Work:**
+- Steps with **no inputs** use their `content` field as the artifact content
+- Steps with **inputs** load all input artifacts, concatenate them, and write the result as the output artifact
+- Both **tool** and **human** handlers follow the same artifact processing logic
+- Artifacts are plain text files that can be inspected directly in the filesystem
+
+For example, if a step has `output = "processed-data"`, it creates the file `.composer/runs/{run-name}/artifacts/processed-data`.
 
 ## Project Structure
 
@@ -170,8 +183,10 @@ This is an early-stage project. Current functionality:
 - State persistence between ticks
 - Human intervention steps that pause workflow execution
 - Task listing and completion via CLI
+- Artifact-based document management with automatic concatenation
+- Inline content for steps with no dependencies
 
-Tool handler steps currently just print their execution (no actual work performed yet). Human handler steps require manual completion via the `do` command.
+Steps process documents by concatenating input artifacts and writing output artifacts. Both tool and human handlers follow the same document processing model.
 
 ## Architecture Notes
 
@@ -185,6 +200,7 @@ Tool handler steps currently just print their execution (no actual work performe
 - **schema.go**: Workflow and Step data structures
 - **state.go**: RunState management, persistence, and helper methods
 - **paths.go**: Path resolution for workflows and runs
+- **artifacts.go**: Artifact I/O operations (read, write, list)
 
 ### CLI (`cmd/composer/`)
 Two commands:

@@ -33,11 +33,6 @@ func TestNewRunState(t *testing.T) {
 			t.Errorf("Step %s status should be pending, got %s", step.Name, stepState.Status)
 		}
 	}
-
-	// Check outputs is empty
-	if len(state.Outputs) != 0 {
-		t.Errorf("Expected 0 outputs, got %d", len(state.Outputs))
-	}
 }
 
 func TestSaveAndLoadState(t *testing.T) {
@@ -55,12 +50,12 @@ func TestSaveAndLoadState(t *testing.T) {
 
 	// Create a state
 	state := &RunState{
+		WorkflowName: "test-workflow",
 		StepStates: map[string]StepState{
 			"step1": {Status: StatusSucceeded},
 			"step2": {Status: StatusPending},
 			"step3": {Status: StatusFailed},
 		},
-		Outputs: []string{"output1", "output2"},
 	}
 
 	// Save the state
@@ -96,65 +91,8 @@ func TestSaveAndLoadState(t *testing.T) {
 		}
 	}
 
-	if len(loadedState.Outputs) != len(state.Outputs) {
-		t.Errorf("Loaded state has %d outputs, expected %d", len(loadedState.Outputs), len(state.Outputs))
-	}
-
-	for i, output := range state.Outputs {
-		if loadedState.Outputs[i] != output {
-			t.Errorf("Output[%d] is %s, expected %s", i, loadedState.Outputs[i], output)
-		}
-	}
-}
-
-func TestHasOutput(t *testing.T) {
-	state := &RunState{
-		Outputs: []string{"output1", "output2", "output3"},
-	}
-
-	tests := []struct {
-		output   string
-		expected bool
-	}{
-		{"output1", true},
-		{"output2", true},
-		{"output3", true},
-		{"output4", false},
-		{"", false},
-	}
-
-	for _, tt := range tests {
-		result := state.HasOutput(tt.output)
-		if result != tt.expected {
-			t.Errorf("HasOutput(%s) = %v, expected %v", tt.output, result, tt.expected)
-		}
-	}
-}
-
-func TestAddOutput(t *testing.T) {
-	state := &RunState{
-		Outputs: []string{"output1"},
-	}
-
-	// Add a new output
-	state.AddOutput("output2")
-	if len(state.Outputs) != 2 {
-		t.Errorf("Expected 2 outputs, got %d", len(state.Outputs))
-	}
-	if !state.HasOutput("output2") {
-		t.Error("output2 should be in outputs")
-	}
-
-	// Try to add a duplicate
-	state.AddOutput("output1")
-	if len(state.Outputs) != 2 {
-		t.Errorf("Expected 2 outputs after duplicate add, got %d", len(state.Outputs))
-	}
-
-	// Add another new output
-	state.AddOutput("output3")
-	if len(state.Outputs) != 3 {
-		t.Errorf("Expected 3 outputs, got %d", len(state.Outputs))
+	if loadedState.WorkflowName != state.WorkflowName {
+		t.Errorf("Loaded workflow name is %s, expected %s", loadedState.WorkflowName, state.WorkflowName)
 	}
 }
 

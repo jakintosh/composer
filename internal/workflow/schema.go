@@ -6,6 +6,7 @@ type Step struct {
 	Description string   `toml:"description"`
 	Handler     string   `toml:"handler"` // "tool" (default), "human"
 	Prompt      string   `toml:"prompt"`  // Instructions for cognitive handlers
+	Content     string   `toml:"content"` // Inline content for steps with no inputs
 	Inputs      []string `toml:"inputs"`
 	Output      string   `toml:"output"`
 }

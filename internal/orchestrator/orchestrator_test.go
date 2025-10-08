@@ -14,7 +14,7 @@ func TestCreateRun(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "step1", Output: "out1"},
+			{Name: "step1", Content: "initial", Output: "out1"},
 			{Name: "step2", Inputs: []string{"out1"}, Output: "out2"},
 		},
 	}
@@ -39,9 +39,13 @@ func TestCreateRun(t *testing.T) {
 		}
 	}
 
-	// No outputs yet
-	if len(state.Outputs) != 0 {
-		t.Errorf("Expected 0 outputs, got %d", len(state.Outputs))
+	// No artifacts yet
+	artifacts, err := workflow.ListArtifacts(runName)
+	if err != nil {
+		t.Fatalf("Failed to list artifacts: %v", err)
+	}
+	if len(artifacts) != 0 {
+		t.Errorf("Expected 0 artifacts, got %d", len(artifacts))
 	}
 }
 
@@ -52,7 +56,7 @@ func TestTickWithNoInputs(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "start", Description: "Start step", Output: "started"},
+			{Name: "start", Description: "Start step", Content: "initial content", Output: "started"},
 		},
 	}
 
@@ -74,8 +78,19 @@ func TestTickWithNoInputs(t *testing.T) {
 	if state.StepStates["start"].Status != workflow.StatusSucceeded {
 		t.Error("Start step should be succeeded")
 	}
-	if !state.HasOutput("started") {
-		t.Error("Should have 'started' output")
+
+	// Verify artifact was created
+	if !workflow.HasArtifact(runName, "started") {
+		t.Error("Should have 'started' artifact")
+	}
+
+	// Verify artifact content
+	content, err := workflow.ReadArtifact(runName, "started")
+	if err != nil {
+		t.Fatalf("Failed to read artifact: %v", err)
+	}
+	if content != "initial content" {
+		t.Errorf("Artifact content should be 'initial content', got '%s'", content)
 	}
 }
 
@@ -86,7 +101,7 @@ func TestTickWithDependencies(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "step1", Output: "out1"},
+			{Name: "step1", Content: "step1 content", Output: "out1"},
 			{Name: "step2", Inputs: []string{"out1"}, Output: "out2"},
 			{Name: "step3", Inputs: []string{"out2"}, Output: "out3"},
 		},
@@ -112,6 +127,12 @@ func TestTickWithDependencies(t *testing.T) {
 		t.Error("step2 should still be pending")
 	}
 
+	// Verify artifact content is from step1
+	content, _ := workflow.ReadArtifact(runName, "out1")
+	if content != "step1 content" {
+		t.Errorf("out1 should contain 'step1 content', got '%s'", content)
+	}
+
 	// Second tick: step2 runs
 	complete, err = Tick(wf, runName)
 	if err != nil {
@@ -129,6 +150,12 @@ func TestTickWithDependencies(t *testing.T) {
 		t.Error("step3 should still be pending")
 	}
 
+	// Verify artifact content is concatenated from step1
+	content, _ = workflow.ReadArtifact(runName, "out2")
+	if content != "step1 content" {
+		t.Errorf("out2 should contain 'step1 content', got '%s'", content)
+	}
+
 	// Third tick: step3 runs
 	complete, err = Tick(wf, runName)
 	if err != nil {
@@ -142,6 +169,12 @@ func TestTickWithDependencies(t *testing.T) {
 	if state.StepStates["step3"].Status != workflow.StatusSucceeded {
 		t.Error("step3 should be succeeded")
 	}
+
+	// Verify final artifact content
+	content, _ = workflow.ReadArtifact(runName, "out3")
+	if content != "step1 content" {
+		t.Errorf("out3 should contain 'step1 content', got '%s'", content)
+	}
 }
 
 func TestTickWithParallelSteps(t *testing.T) {
@@ -151,9 +184,9 @@ func TestTickWithParallelSteps(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "parallel1", Output: "out1"},
-			{Name: "parallel2", Output: "out2"},
-			{Name: "parallel3", Output: "out3"},
+			{Name: "parallel1", Content: "data1", Output: "out1"},
+			{Name: "parallel2", Content: "data2", Output: "out2"},
+			{Name: "parallel3", Content: "data3", Output: "out3"},
 			{Name: "combine", Inputs: []string{"out1", "out2", "out3"}, Output: "combined"},
 		},
 	}
@@ -203,7 +236,7 @@ func TestTickOnCompleteWorkflow(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "only", Output: "done"},
+			{Name: "only", Content: "done content", Output: "done"},
 		},
 	}
 
@@ -224,9 +257,13 @@ func TestTickOnCompleteWorkflow(t *testing.T) {
 }
 
 func TestFindRunnableSteps(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	runName := "test-run"
 	wf := &workflow.Workflow{
 		Steps: []workflow.Step{
-			{Name: "step1", Output: "out1"},
+			{Name: "step1", Content: "initial", Output: "out1"},
 			{Name: "step2", Inputs: []string{"out1"}, Output: "out2"},
 			{Name: "step3", Inputs: []string{"out1", "out2"}, Output: "out3"},
 			{Name: "step4", Inputs: []string{"out3"}, Output: "out4"},
@@ -235,48 +272,52 @@ func TestFindRunnableSteps(t *testing.T) {
 
 	// Initial state: only step1 should be runnable
 	state := workflow.NewRunState(wf)
-	runnable := findRunnableSteps(wf, state)
+	runnable := findRunnableSteps(wf, state, runName)
 	if len(runnable) != 1 || runnable[0].Name != "step1" {
 		t.Errorf("Expected only step1 to be runnable, got %v", runnable)
 	}
 
 	// After step1 completes
 	state.StepStates["step1"] = workflow.StepState{Status: workflow.StatusSucceeded}
-	state.AddOutput("out1")
-	runnable = findRunnableSteps(wf, state)
+	workflow.WriteArtifact(runName, "out1", "artifact1 content")
+	runnable = findRunnableSteps(wf, state, runName)
 	if len(runnable) != 1 || runnable[0].Name != "step2" {
 		t.Errorf("Expected only step2 to be runnable, got %v", runnable)
 	}
 
 	// After step2 completes
 	state.StepStates["step2"] = workflow.StepState{Status: workflow.StatusSucceeded}
-	state.AddOutput("out2")
-	runnable = findRunnableSteps(wf, state)
+	workflow.WriteArtifact(runName, "out2", "artifact2 content")
+	runnable = findRunnableSteps(wf, state, runName)
 	if len(runnable) != 1 || runnable[0].Name != "step3" {
 		t.Errorf("Expected only step3 to be runnable, got %v", runnable)
 	}
 
 	// After step3 completes
 	state.StepStates["step3"] = workflow.StepState{Status: workflow.StatusSucceeded}
-	state.AddOutput("out3")
-	runnable = findRunnableSteps(wf, state)
+	workflow.WriteArtifact(runName, "out3", "artifact3 content")
+	runnable = findRunnableSteps(wf, state, runName)
 	if len(runnable) != 1 || runnable[0].Name != "step4" {
 		t.Errorf("Expected only step4 to be runnable, got %v", runnable)
 	}
 
 	// After all complete
 	state.StepStates["step4"] = workflow.StepState{Status: workflow.StatusSucceeded}
-	runnable = findRunnableSteps(wf, state)
+	runnable = findRunnableSteps(wf, state, runName)
 	if len(runnable) != 0 {
 		t.Errorf("Expected no runnable steps, got %v", runnable)
 	}
 }
 
 func TestFindRunnableStepsWithMultipleInputs(t *testing.T) {
+	tempDir := t.TempDir()
+	os.Chdir(tempDir)
+
+	runName := "test-run"
 	wf := &workflow.Workflow{
 		Steps: []workflow.Step{
-			{Name: "a", Output: "out_a"},
-			{Name: "b", Output: "out_b"},
+			{Name: "a", Content: "content a", Output: "out_a"},
+			{Name: "b", Content: "content b", Output: "out_b"},
 			{Name: "c", Inputs: []string{"out_a", "out_b"}, Output: "out_c"},
 		},
 	}
@@ -284,23 +325,23 @@ func TestFindRunnableStepsWithMultipleInputs(t *testing.T) {
 	state := workflow.NewRunState(wf)
 
 	// Both a and b should be runnable
-	runnable := findRunnableSteps(wf, state)
+	runnable := findRunnableSteps(wf, state, runName)
 	if len(runnable) != 2 {
 		t.Errorf("Expected 2 runnable steps, got %d", len(runnable))
 	}
 
 	// After only a completes, c should not be runnable
 	state.StepStates["a"] = workflow.StepState{Status: workflow.StatusSucceeded}
-	state.AddOutput("out_a")
-	runnable = findRunnableSteps(wf, state)
+	workflow.WriteArtifact(runName, "out_a", "artifact a")
+	runnable = findRunnableSteps(wf, state, runName)
 	if len(runnable) != 1 || runnable[0].Name != "b" {
 		t.Errorf("Expected only b to be runnable, got %v", runnable)
 	}
 
 	// After b completes, c should be runnable
 	state.StepStates["b"] = workflow.StepState{Status: workflow.StatusSucceeded}
-	state.AddOutput("out_b")
-	runnable = findRunnableSteps(wf, state)
+	workflow.WriteArtifact(runName, "out_b", "artifact b")
+	runnable = findRunnableSteps(wf, state, runName)
 	if len(runnable) != 1 || runnable[0].Name != "c" {
 		t.Errorf("Expected only c to be runnable, got %v", runnable)
 	}
@@ -313,7 +354,7 @@ func TestHumanHandlerStep(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "automated", Handler: "tool", Output: "auto-out"},
+			{Name: "automated", Handler: "tool", Content: "auto content", Output: "auto-out"},
 			{Name: "manual", Handler: "human", Prompt: "Please review the data", Inputs: []string{"auto-out"}, Output: "manual-out"},
 		},
 	}
@@ -349,9 +390,9 @@ func TestHumanHandlerStep(t *testing.T) {
 		t.Errorf("Manual step should be ready, got %s", state.StepStates["manual"].Status)
 	}
 
-	// Manual step output should not be added yet
-	if state.HasOutput("manual-out") {
-		t.Error("Manual step output should not be added until completed")
+	// Manual step artifact should not exist yet
+	if workflow.HasArtifact(runName, "manual-out") {
+		t.Error("Manual step artifact should not exist until completed")
 	}
 }
 
@@ -362,7 +403,7 @@ func TestListWaitingTasks(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "auto1", Handler: "tool", Output: "out1"},
+			{Name: "auto1", Handler: "tool", Content: "initial", Output: "out1"},
 			{Name: "manual1", Handler: "human", Prompt: "Review data 1", Inputs: []string{"out1"}, Output: "out2"},
 			{Name: "manual2", Handler: "human", Prompt: "Review data 2", Inputs: []string{"out1"}, Output: "out3"},
 			{Name: "auto2", Handler: "tool", Inputs: []string{"out2", "out3"}, Output: "out4"},
@@ -430,7 +471,7 @@ func TestCompleteTask(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "auto", Handler: "tool", Output: "out1"},
+			{Name: "auto", Handler: "tool", Content: "auto data", Output: "out1"},
 			{Name: "manual1", Handler: "human", Prompt: "Task 1", Inputs: []string{"out1"}, Output: "out2"},
 			{Name: "manual2", Handler: "human", Prompt: "Task 2", Inputs: []string{"out1"}, Output: "out3"},
 			{Name: "final", Handler: "tool", Inputs: []string{"out2", "out3"}, Output: "out4"},
@@ -465,13 +506,18 @@ func TestCompleteTask(t *testing.T) {
 	for _, name := range taskNames {
 		if state.StepStates[name].Status == workflow.StatusSucceeded {
 			succeededCount++
-			// Should have the output
+			// Should have the artifact
 			expectedOutput := "out2"
 			if name == "manual2" {
 				expectedOutput = "out3"
 			}
-			if !state.HasOutput(expectedOutput) {
-				t.Errorf("Should have output %s after completing %s", expectedOutput, name)
+			if !workflow.HasArtifact(runName, expectedOutput) {
+				t.Errorf("Should have artifact %s after completing %s", expectedOutput, name)
+			}
+			// Verify artifact content is from auto step
+			content, _ := workflow.ReadArtifact(runName, expectedOutput)
+			if content != "auto data" {
+				t.Errorf("Artifact %s should contain 'auto data', got '%s'", expectedOutput, content)
 			}
 		}
 	}
@@ -488,7 +534,7 @@ func TestCompleteTaskInvalidIndex(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "manual", Handler: "human", Prompt: "Task", Output: "out"},
+			{Name: "manual", Handler: "human", Prompt: "Task", Content: "data", Output: "out"},
 		},
 	}
 
@@ -510,7 +556,7 @@ func TestMixedHandlerWorkflow(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "fetch", Handler: "tool", Output: "data"},
+			{Name: "fetch", Handler: "tool", Content: "fetched data", Output: "data"},
 			{Name: "review", Handler: "human", Prompt: "Review the data", Inputs: []string{"data"}, Output: "reviewed"},
 			{Name: "process", Handler: "tool", Inputs: []string{"reviewed"}, Output: "processed"},
 		},
@@ -566,7 +612,7 @@ func TestDefaultHandlerIsTool(t *testing.T) {
 	wf := &workflow.Workflow{
 		ID: "test",
 		Steps: []workflow.Step{
-			{Name: "step", Output: "out"}, // No handler specified
+			{Name: "step", Content: "default content", Output: "out"}, // No handler specified
 		},
 	}
 
