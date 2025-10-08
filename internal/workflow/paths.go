@@ -51,3 +51,20 @@ func GetWorkflowPaths() []string {
 
 	return workflowPaths
 }
+
+// GetRunsDir returns the path to the runs directory in the current working directory
+// (./.composer/runs/)
+func GetRunsDir() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		// Fallback to relative path if we can't get cwd
+		return filepath.Join(".composer", "runs")
+	}
+	return filepath.Join(cwd, ".composer", "runs")
+}
+
+// GetRunDir returns the path to a specific run's directory
+// (./.composer/runs/{runName}/)
+func GetRunDir(runName string) string {
+	return filepath.Join(GetRunsDir(), runName)
+}

@@ -40,6 +40,9 @@ func LoadWorkflow(name string) (*Workflow, string, error) {
 			return nil, "", fmt.Errorf("error parsing workflow file %s: %w", workflowPath, err)
 		}
 
+		// Set the workflow ID from the filename (without .toml extension)
+		workflow.ID = name
+
 		return &workflow, workflowPath, nil
 	}
 

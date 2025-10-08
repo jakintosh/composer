@@ -13,7 +13,7 @@ func TestLoadWorkflow_ValidWorkflow(t *testing.T) {
 
 	// Create a test workflow file
 	workflowContent := `
-name = "test-workflow"
+title = "Test Workflow"
 description = "A test workflow"
 message = "Hello, World!"
 `
@@ -43,8 +43,12 @@ message = "Hello, World!"
 		t.Fatal("Expected workflow, got nil")
 	}
 
-	if workflow.Name != "test-workflow" {
-		t.Errorf("Expected name 'test-workflow', got '%s'", workflow.Name)
+	if workflow.ID != "test" {
+		t.Errorf("Expected ID 'test', got '%s'", workflow.ID)
+	}
+
+	if workflow.Title != "Test Workflow" {
+		t.Errorf("Expected title 'Test Workflow', got '%s'", workflow.Title)
 	}
 
 	if workflow.Description != "A test workflow" {
@@ -88,7 +92,7 @@ func TestLoadWorkflow_InvalidTOML(t *testing.T) {
 
 	// Create an invalid TOML file
 	invalidContent := `
-name = "test
+title = "test
 this is not valid TOML
 `
 	composerDir := filepath.Join(tmpDir, ".composer", "workflows")

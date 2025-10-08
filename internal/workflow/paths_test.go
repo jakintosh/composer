@@ -94,3 +94,49 @@ func TestGetWorkflowPathsWithXDGDataHome(t *testing.T) {
 		t.Errorf("Expected second path to be %s, got %s", expectedUserPath, paths[1])
 	}
 }
+
+func TestGetRunsDir(t *testing.T) {
+	runsDir := GetRunsDir()
+
+	// Should be ./.composer/runs in current working directory
+	cwd, _ := os.Getwd()
+	expected := filepath.Join(cwd, ".composer", "runs")
+	if runsDir != expected {
+		t.Errorf("Expected runs dir to be %s, got %s", expected, runsDir)
+	}
+}
+
+func TestGetRunDir(t *testing.T) {
+	runName := "test-run"
+	runDir := GetRunDir(runName)
+
+	// Should be ./.composer/runs/test-run in current working directory
+	cwd, _ := os.Getwd()
+	expected := filepath.Join(cwd, ".composer", "runs", runName)
+	if runDir != expected {
+		t.Errorf("Expected run dir to be %s, got %s", expected, runDir)
+	}
+}
+
+func TestGetRunDirWithDifferentNames(t *testing.T) {
+	tests := []struct {
+		name    string
+		runName string
+	}{
+		{"simple name", "my-run"},
+		{"with numbers", "run-123"},
+		{"with underscores", "my_test_run"},
+		{"with dots", "run.v1.0"},
+	}
+
+	cwd, _ := os.Getwd()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runDir := GetRunDir(tt.runName)
+			expected := filepath.Join(cwd, ".composer", "runs", tt.runName)
+			if runDir != expected {
+				t.Errorf("Expected run dir to be %s, got %s", expected, runDir)
+			}
+		})
+	}
+}
