@@ -1,4 +1,7 @@
-.PHONY: build
+.PHONY: build build-daemon
 
-build:
+build: build-daemon
 	go build -o bin/composer ./cmd/composer
+
+build-daemon:
+	go build -o bin/composerd ./cmd/composerd
