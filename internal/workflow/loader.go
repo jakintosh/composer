@@ -49,3 +49,84 @@ func LoadWorkflow(name string) (*Workflow, string, error) {
 	// Workflow not found in any search path
 	return nil, "", fmt.Errorf("workflow '%s' not found in any of the search paths: %v", name, searchPaths)
 }
+
+// ListWorkflows returns all workflows found in the search paths
+func ListWorkflows() ([]Workflow, error) {
+	workflows := []Workflow{}
+	seen := make(map[string]bool)
+
+	searchPaths := GetWorkflowPaths()
+
+	for _, dir := range searchPaths {
+		// Check if directory exists
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			continue
+		}
+
+		// Read directory entries
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			return nil, fmt.Errorf("error reading workflow directory %s: %w", dir, err)
+		}
+
+		for _, entry := range entries {
+			// Skip directories and non-.toml files
+			if entry.IsDir() || filepath.Ext(entry.Name()) != ".toml" {
+				continue
+			}
+
+			// Extract workflow name (filename without .toml extension)
+			name := entry.Name()[:len(entry.Name())-5]
+
+			// Skip if we've already seen this workflow (earlier paths take precedence)
+			if seen[name] {
+				continue
+			}
+			seen[name] = true
+
+			// Load the workflow
+			workflow, _, err := LoadWorkflow(name)
+			if err != nil {
+				return nil, fmt.Errorf("error loading workflow %s: %w", name, err)
+			}
+
+			workflows = append(workflows, *workflow)
+		}
+	}
+
+	return workflows, nil
+}
+
+// SaveWorkflow saves a workflow to the local .composer/workflows/ directory
+func SaveWorkflow(workflow *Workflow) error {
+	if workflow.ID == "" {
+		return fmt.Errorf("workflow ID cannot be empty")
+	}
+
+	// Get current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current working directory: %w", err)
+	}
+
+	// Create .composer/workflows/ directory if it doesn't exist
+	workflowDir := filepath.Join(cwd, ".composer", "workflows")
+	if err := os.MkdirAll(workflowDir, 0755); err != nil {
+		return fmt.Errorf("failed to create workflow directory: %w", err)
+	}
+
+	// Marshal workflow to TOML
+	data, err := toml.Marshal(workflow)
+	if err != nil {
+		return fmt.Errorf("failed to marshal workflow: %w", err)
+	}
+
+	// Write to file
+	filename := workflow.ID + ".toml"
+	workflowPath := filepath.Join(workflowDir, filename)
+	if err := os.WriteFile(workflowPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write workflow file: %w", err)
+	}
+
+	return nil
+}

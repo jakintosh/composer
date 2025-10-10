@@ -188,3 +188,40 @@ func (rs *RunState) WriteArtifact(name, content string) error {
 
 	return nil
 }
+
+// ListRuns returns all runs found in the runs directory
+func ListRuns() ([]RunState, error) {
+	runsDir := GetRunsDir()
+
+	// Check if runs directory exists
+	if _, err := os.Stat(runsDir); os.IsNotExist(err) {
+		return []RunState{}, nil
+	}
+
+	// Read directory entries
+	entries, err := os.ReadDir(runsDir)
+	if err != nil {
+		return nil, fmt.Errorf("error reading runs directory: %w", err)
+	}
+
+	runs := []RunState{}
+	for _, entry := range entries {
+		// Skip non-directories
+		if !entry.IsDir() {
+			continue
+		}
+
+		runName := entry.Name()
+
+		// Try to load the run state
+		state, err := LoadState(runName)
+		if err != nil {
+			// Skip runs that can't be loaded (might be incomplete or corrupted)
+			continue
+		}
+
+		runs = append(runs, *state)
+	}
+
+	return runs, nil
+}
