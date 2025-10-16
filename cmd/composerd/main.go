@@ -6,13 +6,18 @@ import (
 	"net/http"
 
 	"composer/internal/api"
+	"composer/internal/ui"
 )
 
 func main() {
 	addr := "localhost:8080"
 
-	// Build the router from the api package
-	mux := api.BuildRouter()
+	apiMux := api.BuildRouter()
+	uiMux := ui.BuildRouter()
+
+	mux := http.NewServeMux()
+	mux.Handle("/", uiMux)
+	mux.Handle("/api/", apiMux)
 
 	fmt.Printf("Starting composerd on http://%s\n", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {

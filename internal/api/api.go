@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -22,20 +21,11 @@ type APIError struct {
 func BuildRouter() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	// Root handler
-	mux.HandleFunc("GET /", handleRoot)
-
 	// Delegate to resource-specific routers
 	buildWorkflowsRouter(mux)
 	buildRunsRouter(mux)
 
 	return mux
-}
-
-// handleRoot handles the root endpoint
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, "<html><body><h1>Coming soon</h1></body></html>")
 }
 
 // writeError writes an error response with the given status code
