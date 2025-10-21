@@ -1,0 +1,35 @@
+{{define "components/run/column"}}
+<section class="column">
+  <h2>Runs</h2>
+  {{if .}}
+    <ul class="item-list">
+      {{range .}}
+        <li class="list-item">
+          <details>
+            <summary>
+              <span class="item-title">{{.Name}}</span>
+              <span class="item-state state {{.StateClass}}">{{.StateLabel}}</span>
+            </summary>
+            <div class="item-details">
+              <p><strong>Workflow:</strong> {{.WorkflowName}}</p>
+              {{if .Steps}}
+                <h3>Steps</h3>
+                <ul class="detail-list">
+                  {{range .Steps}}
+                    <li>
+                      <span>{{.Name}}</span>
+                      <span class="state {{.StatusClass}}">— {{.Status}}</span>
+                    </li>
+                  {{end}}
+                </ul>
+              {{end}}
+            </div>
+          </details>
+        </li>
+      {{end}}
+    </ul>
+  {{else}}
+    <p>No runs found.</p>
+  {{end}}
+</section>
+{{end}}

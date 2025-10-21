@@ -13,7 +13,10 @@ func main() {
 	addr := "localhost:8080"
 
 	apiMux := api.BuildRouter()
-	uiMux := ui.BuildRouter()
+	uiMux, err := ui.BuildRouter()
+	if err != nil {
+		log.Fatalf("failed to set up UI: %v", err)
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/", uiMux)

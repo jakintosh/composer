@@ -8,30 +8,42 @@ import (
 )
 
 // BuildRouter creates and configures the UI router.
-func BuildRouter() *http.ServeMux {
+func BuildRouter() (*http.ServeMux, error) {
+	renderer, err := NewRenderer(nil)
+	if err != nil {
+		return nil, fmt.Errorf("prepare renderer: %w", err)
+	}
+
+	staticFS, err := staticFileSystem()
+	if err != nil {
+		return nil, fmt.Errorf("load static assets: %w", err)
+	}
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", handleDashboard)
-	return mux
+	mux.Handle("GET /", handleDashboard(renderer))
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+	return mux, nil
 }
 
-func handleDashboard(w http.ResponseWriter, r *http.Request) {
-	workflows, err := workflow.ListWorkflows()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to load workflows: %v", err), http.StatusInternalServerError)
-		return
-	}
+func handleDashboard(renderer *Renderer) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		workflows, err := workflow.ListWorkflows()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to load workflows: %v", err), http.StatusInternalServerError)
+			return
+		}
 
-	runs, err := workflow.ListRuns()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to load runs: %v", err), http.StatusInternalServerError)
-		return
-	}
+		runs, err := workflow.ListRuns()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to load runs: %v", err), http.StatusInternalServerError)
+			return
+		}
 
-	data := buildDashboardData(workflows, runs)
+		data := buildDashboardViewModel(workflows, runs)
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := renderDashboard(w, data); err != nil {
-		http.Error(w, fmt.Sprintf("failed to render dashboard: %v", err), http.StatusInternalServerError)
-		return
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := renderer.Page(w, "pages/dashboard", data); err != nil {
+			http.Error(w, fmt.Sprintf("failed to render dashboard: %v", err), http.StatusInternalServerError)
+		}
 	}
 }

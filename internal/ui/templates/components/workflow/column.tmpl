@@ -1,0 +1,36 @@
+{{define "components/workflow/column"}}
+<section class="column">
+  <div class="column-header">
+    <h2>Workflows</h2>
+    <button id="open-workflow-modal" class="primary-action" type="button" title="Create workflow" aria-label="Create workflow">+</button>
+  </div>
+
+  {{if .}}
+    <ul class="item-list">
+      {{range .}}
+        <li class="list-item">
+          <details>
+            <summary>
+              <span class="item-title">{{.DisplayName}}</span>
+            </summary>
+            <div class="item-details">
+              <p><strong>ID:</strong> {{.ID}}</p>
+              {{if .Title}}<p><strong>Title:</strong> {{.Title}}</p>{{end}}
+              {{if .Description}}<p><strong>Description:</strong> {{.Description}}</p>{{end}}
+              {{if .Message}}<p><strong>Message:</strong> {{.Message}}</p>{{end}}
+              {{if .StepNames}}
+                <h3>Steps</h3>
+                <ul class="detail-list">
+                  {{range .StepNames}}<li>{{.}}</li>{{end}}
+                </ul>
+              {{end}}
+            </div>
+          </details>
+        </li>
+      {{end}}
+    </ul>
+  {{else}}
+    <p>No workflows available.</p>
+  {{end}}
+</section>
+{{end}}

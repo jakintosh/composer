@@ -1,0 +1,18 @@
+{{define "pages/dashboard"}}
+  {{template "layouts/base" .}}
+{{end}}
+
+{{define "title"}}Composer Workflow Dashboard{{end}}
+
+{{define "content"}}
+  <h1>Workflow Dashboard</h1>
+  <div class="columns">
+    {{template "components/workflow/column" .Workflows}}
+    {{template "components/run/column" .Runs}}
+  </div>
+  {{template "components/workflow/modal" .}}
+{{end}}
+
+{{define "scripts"}}
+  <script src="/static/dashboard.js" defer></script>
+{{end}}

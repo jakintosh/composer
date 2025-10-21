@@ -1,40 +1,38 @@
 package ui
 
 import (
-	"html/template"
-	"io"
 	"sort"
 	"strings"
 
 	"composer/internal/workflow"
 )
 
-var dashboardTemplate = template.Must(template.New("dashboard").Parse(
-	strings.Join([]string{
-		workflowColumnTemplate,
-		runColumnTemplate,
-		workflowModalTemplate,
-		dashboardPageTemplate,
-	}, "\n"),
-))
-
-type dashboardData struct {
-	Workflows []workflowItem
-	Runs      []runItem
+type dashboardViewModel struct {
+	Workflows []workflowViewModel
+	Runs      []runViewModel
 }
 
-type workflowItem struct {
+type workflowViewModel struct {
 	DisplayName string
-	Workflow    workflow.Workflow
+	ID          string
+	Title       string
+	Description string
+	Message     string
 	StepNames   []string
 }
 
-type runItem struct {
+type runViewModel struct {
 	Name         string
 	StateLabel   string
 	StateClass   string
 	WorkflowName string
-	Steps        []runStep
+	Steps        []runStepViewModel
+}
+
+type runStepViewModel struct {
+	Name        string
+	Status      string
+	StatusClass string
 }
 
 type runStatus struct {
@@ -42,69 +40,68 @@ type runStatus struct {
 	Class string
 }
 
-type runStep struct {
-	Name        string
-	Status      string
-	StatusClass string
-}
-
-func renderDashboard(w io.Writer, data dashboardData) error {
-	return dashboardTemplate.ExecuteTemplate(w, "dashboard", data)
-}
-
-func buildDashboardData(workflows []workflow.Workflow, runs []workflow.RunState) dashboardData {
-	items := make([]workflowItem, 0, len(workflows))
+func buildDashboardViewModel(workflows []workflow.Workflow, runs []workflow.RunState) dashboardViewModel {
+	workflowVMs := make([]workflowViewModel, 0, len(workflows))
 	for _, wf := range workflows {
-		stepNames := make([]string, 0, len(wf.Steps))
-		for _, step := range wf.Steps {
-			name := strings.TrimSpace(step.Name)
-			if name != "" {
-				stepNames = append(stepNames, name)
-			}
-		}
-
-		items = append(items, workflowItem{
+		workflowVMs = append(workflowVMs, workflowViewModel{
 			DisplayName: workflowDisplayName(wf),
-			Workflow:    wf,
-			StepNames:   stepNames,
+			ID:          strings.TrimSpace(wf.ID),
+			Title:       strings.TrimSpace(wf.Title),
+			Description: strings.TrimSpace(wf.Description),
+			Message:     strings.TrimSpace(wf.Message),
+			StepNames:   collectStepNames(wf.Steps),
 		})
 	}
-	sort.Slice(items, func(i, j int) bool { return items[i].DisplayName < items[j].DisplayName })
+	sort.Slice(workflowVMs, func(i, j int) bool { return workflowVMs[i].DisplayName < workflowVMs[j].DisplayName })
 
-	runItems := make([]runItem, 0, len(runs))
+	runVMs := make([]runViewModel, 0, len(runs))
 	for _, run := range runs {
 		status := summarizeRunState(run)
+		stepNames := sortedStepNames(run.StepStates)
 
-		stepNames := make([]string, 0, len(run.StepStates))
-		for name := range run.StepStates {
-			stepNames = append(stepNames, name)
-		}
-		sort.Strings(stepNames)
-
-		steps := make([]runStep, 0, len(stepNames))
+		steps := make([]runStepViewModel, 0, len(stepNames))
 		for _, name := range stepNames {
 			stepState := run.StepStates[name]
-			steps = append(steps, runStep{
+			steps = append(steps, runStepViewModel{
 				Name:        name,
 				Status:      string(stepState.Status),
 				StatusClass: stateClassForStatus(stepState.Status),
 			})
 		}
 
-		runItems = append(runItems, runItem{
-			Name:         run.RunName,
+		runVMs = append(runVMs, runViewModel{
+			Name:         strings.TrimSpace(run.RunName),
 			StateLabel:   status.Label,
 			StateClass:   status.Class,
-			WorkflowName: run.WorkflowName,
+			WorkflowName: strings.TrimSpace(run.WorkflowName),
 			Steps:        steps,
 		})
 	}
-	sort.Slice(runItems, func(i, j int) bool { return runItems[i].Name < runItems[j].Name })
+	sort.Slice(runVMs, func(i, j int) bool { return runVMs[i].Name < runVMs[j].Name })
 
-	return dashboardData{
-		Workflows: items,
-		Runs:      runItems,
+	return dashboardViewModel{
+		Workflows: workflowVMs,
+		Runs:      runVMs,
 	}
+}
+
+func collectStepNames(steps []workflow.Step) []string {
+	names := make([]string, 0, len(steps))
+	for _, step := range steps {
+		if name := strings.TrimSpace(step.Name); name != "" {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+func sortedStepNames(stepStates map[string]workflow.StepState) []string {
+	names := make([]string, 0, len(stepStates))
+	for name := range stepStates {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
 
 func workflowDisplayName(wf workflow.Workflow) string {
@@ -146,7 +143,7 @@ func summarizeRunState(rs workflow.RunState) runStatus {
 		case workflow.StatusFailed:
 			return runStatus{Label: "failed", Class: "state-failed"}
 		case workflow.StatusSucceeded:
-			// keep allSucceeded true unless another status changes it
+			// still successful unless other statuses contradict
 		case workflow.StatusReady:
 			hasReady = true
 			allSucceeded = false
