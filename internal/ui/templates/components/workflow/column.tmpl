@@ -9,9 +9,19 @@
     <ul class="item-list">
       {{range .Workflows}}
         <li class="list-item">
-          <details>
-            <summary>
+          <details class="workflow-item">
+            <summary class="workflow-summary">
               <span class="item-title">{{.DisplayName}}</span>
+              {{if .ID}}
+                <button type="button"
+                        class="workflow-run-button"
+                        data-open-run-modal
+                        data-workflow-id="{{.ID}}"
+                        data-workflow-display="{{.DisplayName}}"
+                        aria-label="Start run for workflow {{.DisplayName}}">
+                  Run
+                </button>
+              {{end}}
             </summary>
             <div class="item-details">
               <p><strong>ID:</strong> {{.ID}}</p>

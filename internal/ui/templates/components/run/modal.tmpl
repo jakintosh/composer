@@ -1,0 +1,33 @@
+{{define "components/run/modal"}}
+<div id="run-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>Start Run</h2>
+      <button type="button" class="close-button" data-close-modal aria-label="Close start run form">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="run-form-error" class="error-banner" role="alert"></div>
+      <form id="run-form">
+        <input id="run-workflow-id" name="run-workflow-id" type="hidden">
+        <div class="form-row">
+          <label for="run-workflow-name">Workflow Name</label>
+          <input id="run-workflow-name" name="run-workflow-name" type="text" class="read-only-input" readonly aria-readonly="true">
+        </div>
+        <div class="form-row">
+          <label for="run-workflow-id-display">Workflow ID</label>
+          <input id="run-workflow-id-display" name="run-workflow-id-display" type="text" class="read-only-input" readonly aria-readonly="true">
+        </div>
+        <div class="form-row">
+          <label for="run-name">Run Name</label>
+          <input id="run-name" name="run-name" type="text" placeholder="my-run" required>
+          <p class="form-hint">The run name uniquely identifies this run for CLI commands.</p>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="secondary-button" data-close-modal>Cancel</button>
+          <button type="submit" id="run-submit" class="primary-button">Start Run</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{{end}}

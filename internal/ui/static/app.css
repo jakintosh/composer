@@ -138,6 +138,35 @@ h2 {
   flex: 1;
 }
 
+.workflow-run-button {
+  margin-left: auto;
+  background: #2ecc71;
+  border: none;
+  color: #0f0f0f;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: 0 6px 16px rgba(46, 204, 113, 0.25);
+}
+
+.workflow-run-button:focus {
+  outline: 2px solid rgba(46, 204, 113, 0.9);
+  outline-offset: 2px;
+}
+
+.workflow-run-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(46, 204, 113, 0.28);
+}
+
+.workflow-run-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(46, 204, 113, 0.2);
+}
+
 .item-details {
   padding: 0.6rem 0.8rem 0.8rem;
   font-size: 0.95rem;
@@ -244,6 +273,23 @@ form textarea {
 
 .form-row {
   margin-bottom: 1rem;
+}
+
+.form-hint {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: #b5b5b5;
+}
+
+.read-only-input {
+  background: #1d1d1d;
+  color: #bbbbbb;
+  cursor: default;
+}
+
+.read-only-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
 }
 
 .form-actions {
