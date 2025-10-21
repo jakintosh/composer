@@ -7,10 +7,10 @@
 {{define "content"}}
   <h1>Workflow Dashboard</h1>
   <div class="columns">
-    {{template "components/workflow/column" .Workflows}}
+    {{template "components/workflow/column" .WorkflowColumn}}
     {{template "components/run/column" .Runs}}
   </div>
-  {{template "components/workflow/modal" .}}
+  {{template "components/workflow/modal" .WorkflowModal}}
 {{end}}
 
 {{define "scripts"}}

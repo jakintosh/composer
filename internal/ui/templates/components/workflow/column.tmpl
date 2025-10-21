@@ -2,12 +2,12 @@
 <section class="column">
   <div class="column-header">
     <h2>Workflows</h2>
-    <button id="open-workflow-modal" class="primary-action" type="button" title="Create workflow" aria-label="Create workflow">+</button>
+    {{template "components/ui/add_button" .CreateButton}}
   </div>
 
-  {{if .}}
+  {{if .Workflows}}
     <ul class="item-list">
-      {{range .}}
+      {{range .Workflows}}
         <li class="list-item">
           <details>
             <summary>

@@ -1,0 +1,12 @@
+{{define "components/ui/add_button"}}
+<button type="{{if .Type}}{{.Type}}{{else}}button{{end}}"
+  {{if .ID}}id="{{.ID}}"{{end}}
+  {{if .Class}}class="{{.Class}}"{{end}}
+  {{if .Title}}title="{{.Title}}"{{end}}
+  {{if .AriaLabel}}aria-label="{{.AriaLabel}}"{{end}}>
+  <svg aria-hidden="true" focusable="false" width="{{if .IconSize}}{{.IconSize}}{{else}}16{{end}}" height="{{if .IconSize}}{{.IconSize}}{{else}}16{{end}}" viewBox="0 0 16 16">
+    <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  </svg>
+  {{if .Label}}<span>{{.Label}}</span>{{end}}
+</button>
+{{end}}

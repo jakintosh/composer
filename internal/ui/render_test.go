@@ -17,14 +17,33 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 	}
 
 	vm := dashboardViewModel{
-		Workflows: []workflowViewModel{
-			{
-				DisplayName: "Example Workflow",
-				ID:          "wf-123",
-				Title:       "Example Workflow",
-				Description: "Example description",
-				Message:     "Example message",
-				StepNames:   []string{"Step A", "Step B"},
+		WorkflowColumn: workflowColumnViewModel{
+			Workflows: []workflowViewModel{
+				{
+					DisplayName: "Example Workflow",
+					ID:          "wf-123",
+					Title:       "Example Workflow",
+					Description: "Example description",
+					Message:     "Example message",
+					StepNames:   []string{"Step A", "Step B"},
+				},
+			},
+			CreateButton: uiButtonViewModel{
+				ID:        "open-workflow-modal",
+				Class:     "primary-action",
+				Title:     "Create workflow",
+				AriaLabel: "Create workflow",
+				Type:      "button",
+				IconSize:  16,
+			},
+		},
+		WorkflowModal: workflowModalViewModel{
+			AddStepButton: uiButtonViewModel{
+				ID:       "add-workflow-step",
+				Class:    "add-step-button",
+				Label:    "Add Step",
+				Type:     "button",
+				IconSize: 16,
 			},
 		},
 		Runs: []runViewModel{

@@ -8,8 +8,28 @@ import (
 )
 
 type dashboardViewModel struct {
-	Workflows []workflowViewModel
-	Runs      []runViewModel
+	WorkflowColumn workflowColumnViewModel
+	WorkflowModal  workflowModalViewModel
+	Runs           []runViewModel
+}
+
+type workflowColumnViewModel struct {
+	Workflows    []workflowViewModel
+	CreateButton uiButtonViewModel
+}
+
+type workflowModalViewModel struct {
+	AddStepButton uiButtonViewModel
+}
+
+type uiButtonViewModel struct {
+	ID        string
+	Class     string
+	Title     string
+	AriaLabel string
+	Label     string
+	Type      string
+	IconSize  int
 }
 
 type workflowViewModel struct {
@@ -80,8 +100,27 @@ func buildDashboardViewModel(workflows []workflow.Workflow, runs []workflow.RunS
 	sort.Slice(runVMs, func(i, j int) bool { return runVMs[i].Name < runVMs[j].Name })
 
 	return dashboardViewModel{
-		Workflows: workflowVMs,
-		Runs:      runVMs,
+		WorkflowColumn: workflowColumnViewModel{
+			Workflows: workflowVMs,
+			CreateButton: uiButtonViewModel{
+				ID:        "open-workflow-modal",
+				Class:     "primary-action",
+				Title:     "Create workflow",
+				AriaLabel: "Create workflow",
+				Type:      "button",
+				IconSize:  16,
+			},
+		},
+		WorkflowModal: workflowModalViewModel{
+			AddStepButton: uiButtonViewModel{
+				ID:       "add-workflow-step",
+				Class:    "add-step-button",
+				Label:    "Add Step",
+				Type:     "button",
+				IconSize: 16,
+			},
+		},
+		Runs: runVMs,
 	}
 }
 
