@@ -19,14 +19,14 @@ func TestCreateRun(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	err := CreateRun(wf, runName)
+	runID := "test-run"
+	err := CreateRun(wf, runID, runID)
 	if err != nil {
 		t.Fatalf("CreateRun failed: %v", err)
 	}
 
 	// Verify state was saved
-	state, err := workflow.LoadState(runName)
+	state, err := workflow.LoadState(runID)
 	if err != nil {
 		t.Fatalf("Failed to load state: %v", err)
 	}
@@ -57,11 +57,11 @@ func TestTickWithNoInputs(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// First tick should run the step with no inputs
-	complete, err := Tick(wf, runName)
+	complete, err := Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("Tick failed: %v", err)
 	}
@@ -71,13 +71,13 @@ func TestTickWithNoInputs(t *testing.T) {
 	}
 
 	// Verify state
-	state, _ := workflow.LoadState(runName)
+	state, _ := workflow.LoadState(runID)
 	if state.StepStates["start"].Status != workflow.StatusSucceeded {
 		t.Error("Start step should be succeeded")
 	}
 
 	// Reload state to access artifacts
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 
 	// Verify artifact was created
 	if !state.HasArtifact("started") {
@@ -107,11 +107,11 @@ func TestTickWithDependencies(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// First tick: step1 runs
-	complete, err := Tick(wf, runName)
+	complete, err := Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("First tick failed: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestTickWithDependencies(t *testing.T) {
 		t.Error("Workflow should not be complete after first tick")
 	}
 
-	state, _ := workflow.LoadState(runName)
+	state, _ := workflow.LoadState(runID)
 	if state.StepStates["step1"].Status != workflow.StatusSucceeded {
 		t.Error("step1 should be succeeded")
 	}
@@ -128,7 +128,7 @@ func TestTickWithDependencies(t *testing.T) {
 	}
 
 	// Reload state to access artifacts
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 
 	// Verify artifact content is from step1
 	content, _ := state.ReadArtifact("out1")
@@ -137,7 +137,7 @@ func TestTickWithDependencies(t *testing.T) {
 	}
 
 	// Second tick: step2 runs
-	complete, err = Tick(wf, runName)
+	complete, err = Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("Second tick failed: %v", err)
 	}
@@ -145,7 +145,7 @@ func TestTickWithDependencies(t *testing.T) {
 		t.Error("Workflow should not be complete after second tick")
 	}
 
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 	if state.StepStates["step2"].Status != workflow.StatusSucceeded {
 		t.Error("step2 should be succeeded")
 	}
@@ -154,7 +154,7 @@ func TestTickWithDependencies(t *testing.T) {
 	}
 
 	// Reload state to access artifacts
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 
 	// Verify artifact content is concatenated from step1
 	content, _ = state.ReadArtifact("out2")
@@ -163,7 +163,7 @@ func TestTickWithDependencies(t *testing.T) {
 	}
 
 	// Third tick: step3 runs
-	complete, err = Tick(wf, runName)
+	complete, err = Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("Third tick failed: %v", err)
 	}
@@ -171,13 +171,13 @@ func TestTickWithDependencies(t *testing.T) {
 		t.Error("Workflow should be complete after third tick")
 	}
 
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 	if state.StepStates["step3"].Status != workflow.StatusSucceeded {
 		t.Error("step3 should be succeeded")
 	}
 
 	// Reload state to access artifacts
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 
 	// Verify final artifact content
 	content, _ = state.ReadArtifact("out3")
@@ -200,11 +200,11 @@ func TestTickWithParallelSteps(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// First tick: all parallel steps run
-	complete, err := Tick(wf, runName)
+	complete, err := Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("First tick failed: %v", err)
 	}
@@ -212,7 +212,7 @@ func TestTickWithParallelSteps(t *testing.T) {
 		t.Error("Workflow should not be complete after first tick")
 	}
 
-	state, _ := workflow.LoadState(runName)
+	state, _ := workflow.LoadState(runID)
 	if state.StepStates["parallel1"].Status != workflow.StatusSucceeded {
 		t.Error("parallel1 should be succeeded")
 	}
@@ -224,7 +224,7 @@ func TestTickWithParallelSteps(t *testing.T) {
 	}
 
 	// Second tick: combine step runs
-	complete, err = Tick(wf, runName)
+	complete, err = Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("Second tick failed: %v", err)
 	}
@@ -232,7 +232,7 @@ func TestTickWithParallelSteps(t *testing.T) {
 		t.Error("Workflow should be complete after second tick")
 	}
 
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 	if state.StepStates["combine"].Status != workflow.StatusSucceeded {
 		t.Error("combine step should be succeeded")
 	}
@@ -249,14 +249,14 @@ func TestTickOnCompleteWorkflow(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// First tick completes the workflow
-	Tick(wf, runName)
+	Tick(wf, runID)
 
 	// Second tick on completed workflow should return true
-	complete, err := Tick(wf, runName)
+	complete, err := Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("Tick on complete workflow failed: %v", err)
 	}
@@ -269,7 +269,7 @@ func TestFindRunnableSteps(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 	wf := &workflow.Workflow{
 		Steps: []workflow.Step{
 			{Name: "step1", Content: "initial", Output: "out1"},
@@ -280,7 +280,7 @@ func TestFindRunnableSteps(t *testing.T) {
 	}
 
 	// Initial state: only step1 should be runnable
-	state := workflow.NewRunState(wf, runName)
+	state := workflow.NewRunState(wf, runID, runID)
 	runnable := findRunnableSteps(wf, state)
 	if len(runnable) != 1 || runnable[0].Name != "step1" {
 		t.Errorf("Expected only step1 to be runnable, got %v", runnable)
@@ -322,7 +322,7 @@ func TestFindRunnableStepsWithMultipleInputs(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 	wf := &workflow.Workflow{
 		Steps: []workflow.Step{
 			{Name: "a", Content: "content a", Output: "out_a"},
@@ -331,7 +331,7 @@ func TestFindRunnableStepsWithMultipleInputs(t *testing.T) {
 		},
 	}
 
-	state := workflow.NewRunState(wf, runName)
+	state := workflow.NewRunState(wf, runID, runID)
 
 	// Both a and b should be runnable
 	runnable := findRunnableSteps(wf, state)
@@ -368,11 +368,11 @@ func TestHumanHandlerStep(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// First tick: automated step runs
-	complete, err := Tick(wf, runName)
+	complete, err := Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("First tick failed: %v", err)
 	}
@@ -380,13 +380,13 @@ func TestHumanHandlerStep(t *testing.T) {
 		t.Error("Workflow should not be complete after first tick")
 	}
 
-	state, _ := workflow.LoadState(runName)
+	state, _ := workflow.LoadState(runID)
 	if state.StepStates["automated"].Status != workflow.StatusSucceeded {
 		t.Error("Automated step should be succeeded")
 	}
 
 	// Second tick: human step should transition to ready, not succeed
-	complete, err = Tick(wf, runName)
+	complete, err = Tick(wf, runID)
 	if err != nil {
 		t.Fatalf("Second tick failed: %v", err)
 	}
@@ -394,7 +394,7 @@ func TestHumanHandlerStep(t *testing.T) {
 		t.Error("Workflow should not be complete with ready task")
 	}
 
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 	if state.StepStates["manual"].Status != workflow.StatusReady {
 		t.Errorf("Manual step should be ready, got %s", state.StepStates["manual"].Status)
 	}
@@ -419,11 +419,11 @@ func TestListWaitingTasks(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// Initially no tasks waiting
-	tasks, err := ListWaitingTasks(wf, runName)
+	tasks, err := ListWaitingTasks(wf, runID)
 	if err != nil {
 		t.Fatalf("ListWaitingTasks failed: %v", err)
 	}
@@ -432,12 +432,12 @@ func TestListWaitingTasks(t *testing.T) {
 	}
 
 	// After first tick, auto1 completes
-	Tick(wf, runName)
+	Tick(wf, runID)
 
 	// After second tick, both manual tasks should be ready
-	Tick(wf, runName)
+	Tick(wf, runID)
 
-	tasks, err = ListWaitingTasks(wf, runName)
+	tasks, err = ListWaitingTasks(wf, runID)
 	if err != nil {
 		t.Fatalf("ListWaitingTasks failed: %v", err)
 	}
@@ -487,22 +487,22 @@ func TestCompleteTask(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// Run until both manual tasks are ready
-	Tick(wf, runName) // auto completes
-	Tick(wf, runName) // manual tasks become ready
+	Tick(wf, runID) // auto completes
+	Tick(wf, runID) // manual tasks become ready
 
 	// Complete task at index 0
-	err := CompleteTask(wf, runName, 0)
+	err := CompleteTask(wf, runID, 0)
 	if err != nil {
 		t.Fatalf("CompleteTask failed: %v", err)
 	}
 
 	// Verify the task is now succeeded
-	state, _ := workflow.LoadState(runName)
-	tasks, _ := ListWaitingTasks(wf, runName)
+	state, _ := workflow.LoadState(runID)
+	tasks, _ := ListWaitingTasks(wf, runID)
 
 	// One task should still be waiting
 	if len(tasks) != 1 {
@@ -547,12 +547,12 @@ func TestCompleteTaskInvalidIndex(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
-	Tick(wf, runName) // Make manual task ready
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
+	Tick(wf, runID) // Make manual task ready
 
 	// Try to complete with invalid index
-	err := CompleteTask(wf, runName, 5)
+	err := CompleteTask(wf, runID, 5)
 	if err == nil {
 		t.Error("Expected error for invalid task index")
 	}
@@ -571,27 +571,27 @@ func TestMixedHandlerWorkflow(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// First tick: fetch runs and completes
-	complete, _ := Tick(wf, runName)
+	complete, _ := Tick(wf, runID)
 	if complete {
 		t.Error("Should not be complete after first tick")
 	}
 
-	state, _ := workflow.LoadState(runName)
+	state, _ := workflow.LoadState(runID)
 	if state.StepStates["fetch"].Status != workflow.StatusSucceeded {
 		t.Error("fetch should be succeeded")
 	}
 
 	// Second tick: review becomes ready
-	complete, _ = Tick(wf, runName)
+	complete, _ = Tick(wf, runID)
 	if complete {
 		t.Error("Should not be complete with ready task")
 	}
 
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 	if state.StepStates["review"].Status != workflow.StatusReady {
 		t.Error("review should be ready")
 	}
@@ -600,15 +600,15 @@ func TestMixedHandlerWorkflow(t *testing.T) {
 	}
 
 	// Complete the review task
-	CompleteTask(wf, runName, 0)
+	CompleteTask(wf, runID, 0)
 
 	// Third tick: process runs
-	complete, _ = Tick(wf, runName)
+	complete, _ = Tick(wf, runID)
 	if !complete {
 		t.Error("Should be complete after processing")
 	}
 
-	state, _ = workflow.LoadState(runName)
+	state, _ = workflow.LoadState(runID)
 	if state.StepStates["process"].Status != workflow.StatusSucceeded {
 		t.Error("process should be succeeded")
 	}
@@ -625,16 +625,16 @@ func TestDefaultHandlerIsTool(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	CreateRun(wf, runName)
+	runID := "test-run"
+	CreateRun(wf, runID, runID)
 
 	// Should auto-execute like a tool handler
-	complete, _ := Tick(wf, runName)
+	complete, _ := Tick(wf, runID)
 	if !complete {
 		t.Error("Should be complete - default handler should be tool")
 	}
 
-	state, _ := workflow.LoadState(runName)
+	state, _ := workflow.LoadState(runID)
 	if state.StepStates["step"].Status != workflow.StatusSucceeded {
 		t.Error("Step with no handler should auto-execute (default to tool)")
 	}

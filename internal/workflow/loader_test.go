@@ -13,7 +13,7 @@ func TestLoadWorkflow_ValidWorkflow(t *testing.T) {
 
 	// Create a test workflow file
 	workflowContent := `
-title = "Test Workflow"
+display_name = "Test Workflow"
 description = "A test workflow"
 message = "Hello, World!"
 `
@@ -47,8 +47,8 @@ message = "Hello, World!"
 		t.Errorf("Expected ID 'test', got '%s'", workflow.ID)
 	}
 
-	if workflow.Title != "Test Workflow" {
-		t.Errorf("Expected title 'Test Workflow', got '%s'", workflow.Title)
+	if workflow.DisplayName != "Test Workflow" {
+		t.Errorf("Expected display name 'Test Workflow', got '%s'", workflow.DisplayName)
 	}
 
 	if workflow.Description != "A test workflow" {
@@ -122,10 +122,10 @@ this is not valid TOML
 	}
 }
 
-func TestLoadWorkflow_EmptyName(t *testing.T) {
+func TestLoadWorkflow_EmptyID(t *testing.T) {
 	workflow, _, err := LoadWorkflow("")
 	if err == nil {
-		t.Fatal("Expected error for empty workflow name, got nil")
+		t.Fatal("Expected error for empty workflow id, got nil")
 	}
 
 	if workflow != nil {

@@ -8,20 +8,21 @@
     <div class="modal-body">
       <div id="run-form-error" class="error-banner" role="alert"></div>
       <form id="run-form">
-        <input id="run-workflow-id" name="run-workflow-id" type="hidden">
         <div class="form-row">
           <label for="run-workflow-name">Workflow Name</label>
           <input id="run-workflow-name" name="run-workflow-name" type="text" class="read-only-input" readonly aria-readonly="true">
         </div>
         <div class="form-row">
-          <label for="run-workflow-id-display">Workflow ID</label>
-          <input id="run-workflow-id-display" name="run-workflow-id-display" type="text" class="read-only-input" readonly aria-readonly="true">
+          <label for="run-workflow-id">Workflow ID</label>
+          <input id="run-workflow-id" name="run-workflow-id" type="text" class="read-only-input" readonly aria-readonly="true">
         </div>
         <div class="form-row">
-          <label for="run-name">Run Name</label>
-          <input id="run-name" name="run-name" type="text" placeholder="my-run" required>
-          <p class="form-hint">The run name uniquely identifies this run for CLI commands.</p>
+          <label for="run-name">Display Name</label>
+          <input id="run-name" name="run-name" type="text" placeholder="My Example Run" required>
+          <p class="form-hint">Shown in the dashboard. Choose something descriptive.</p>
+          <p class="form-hint">Run ID (used for CLI commands): <code id="run-id-preview">—</code></p>
         </div>
+        <input id="run-id" name="run-id" type="hidden">
         <div class="form-actions">
           <button type="button" class="secondary-button" data-close-modal>Cancel</button>
           <button type="submit" id="run-submit" class="primary-button">Start Run</button>

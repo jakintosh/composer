@@ -16,10 +16,10 @@ type WaitingTask struct {
 	Output      string
 }
 
-// CreateRun initializes a new workflow run with the given name
-func CreateRun(wf *workflow.Workflow, runName string) error {
+// CreateRun initializes a new workflow run with the given id and display name
+func CreateRun(wf *workflow.Workflow, runID string, displayName string) error {
 	// Create initial state
-	state := workflow.NewRunState(wf, runName)
+	state := workflow.NewRunState(wf, runID, displayName)
 
 	// Save the initial state
 	if err := state.Save(); err != nil {
@@ -30,9 +30,9 @@ func CreateRun(wf *workflow.Workflow, runName string) error {
 }
 
 // Tick executes one tick of the workflow, running any steps that are ready
-func Tick(wf *workflow.Workflow, runName string) (bool, error) {
+func Tick(wf *workflow.Workflow, runID string) (bool, error) {
 	// Load current state
-	state, err := workflow.LoadState(runName)
+	state, err := workflow.LoadState(runID)
 	if err != nil {
 		return false, fmt.Errorf("failed to load state: %w", err)
 	}
@@ -174,9 +174,9 @@ func findRunnableSteps(wf *workflow.Workflow, state *workflow.RunState) []workfl
 }
 
 // ListWaitingTasks returns all tasks that are ready for human intervention
-func ListWaitingTasks(wf *workflow.Workflow, runName string) ([]WaitingTask, error) {
+func ListWaitingTasks(wf *workflow.Workflow, runID string) ([]WaitingTask, error) {
 	// Load current state
-	state, err := workflow.LoadState(runName)
+	state, err := workflow.LoadState(runID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load state: %w", err)
 	}
@@ -208,7 +208,7 @@ func ListWaitingTasksByRun(runs []workflow.RunState) (map[string][]WaitingTask, 
 	workflowCache := make(map[string]*workflow.Workflow)
 
 	for _, run := range runs {
-		if run.RunName == "" || run.WorkflowName == "" {
+		if run.ID == "" || run.WorkflowName == "" {
 			continue
 		}
 
@@ -217,31 +217,31 @@ func ListWaitingTasksByRun(runs []workflow.RunState) (map[string][]WaitingTask, 
 			var err error
 			wf, _, err = workflow.LoadWorkflow(run.WorkflowName)
 			if err != nil {
-				return nil, fmt.Errorf("load workflow '%s' for run '%s': %w", run.WorkflowName, run.RunName, err)
+				return nil, fmt.Errorf("load workflow '%s' for run '%s': %w", run.WorkflowName, run.ID, err)
 			}
 			workflowCache[run.WorkflowName] = wf
 		}
 
-		tasks, err := ListWaitingTasks(wf, run.RunName)
+		tasks, err := ListWaitingTasks(wf, run.ID)
 		if err != nil {
-			return nil, fmt.Errorf("list waiting tasks for run '%s': %w", run.RunName, err)
+			return nil, fmt.Errorf("list waiting tasks for run '%s': %w", run.ID, err)
 		}
-		tasksByRun[run.RunName] = tasks
+		tasksByRun[run.ID] = tasks
 	}
 
 	return tasksByRun, nil
 }
 
 // CompleteTask marks a ready task as complete and adds its output
-func CompleteTask(wf *workflow.Workflow, runName string, taskIndex int) error {
+func CompleteTask(wf *workflow.Workflow, runID string, taskIndex int) error {
 	// Load current state
-	state, err := workflow.LoadState(runName)
+	state, err := workflow.LoadState(runID)
 	if err != nil {
 		return fmt.Errorf("failed to load state: %w", err)
 	}
 
 	// Get list of waiting tasks
-	tasks, err := ListWaitingTasks(wf, runName)
+	tasks, err := ListWaitingTasks(wf, runID)
 	if err != nil {
 		return fmt.Errorf("failed to list waiting tasks: %w", err)
 	}

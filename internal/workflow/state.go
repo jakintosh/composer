@@ -24,22 +24,29 @@ type StepState struct {
 
 // RunState represents the complete state of a workflow run
 type RunState struct {
+	// ID uniquely identifies this run and is used for storage, APIs, and automation
+	ID string `json:"id"`
+	// Name is the user-facing display string for this run
+	Name string `json:"name"`
 	// WorkflowName is the name of the workflow this run belongs to
 	WorkflowName string `json:"workflow_name"`
 	// StepStates maps step names to their current state
 	StepStates map[string]StepState `json:"step_states"`
-	// RunName is the name of this run (not persisted to JSON)
-	RunName string `json:"-"`
 	// artifactPaths maps artifact names to their filesystem paths (not persisted to JSON)
 	artifactPaths map[string]string `json:"-"`
 }
 
 // NewRunState creates a new run state initialized with pending steps
-func NewRunState(workflow *Workflow, runName string) *RunState {
+func NewRunState(workflow *Workflow, runID string, displayName string) *RunState {
+	if displayName == "" {
+		displayName = runID
+	}
+
 	state := &RunState{
 		WorkflowName:  workflow.ID,
 		StepStates:    make(map[string]StepState),
-		RunName:       runName,
+		ID:            runID,
+		Name:          displayName,
 		artifactPaths: make(map[string]string),
 	}
 
@@ -55,7 +62,11 @@ func NewRunState(workflow *Workflow, runName string) *RunState {
 
 // Save saves the run state to a JSON file in the run directory
 func (rs *RunState) Save() error {
-	runDir := GetRunDir(rs.RunName)
+	if rs.ID == "" {
+		return fmt.Errorf("run ID is required to save state")
+	}
+
+	runDir := GetRunDir(rs.ID)
 
 	// Create the run directory if it doesn't exist
 	if err := os.MkdirAll(runDir, 0755); err != nil {
@@ -76,8 +87,8 @@ func (rs *RunState) Save() error {
 }
 
 // LoadState loads the run state from a JSON file in the run directory
-func LoadState(runName string) (*RunState, error) {
-	runDir := GetRunDir(runName)
+func LoadState(runID string) (*RunState, error) {
+	runDir := GetRunDir(runID)
 	statePath := filepath.Join(runDir, "state.json")
 
 	data, err := os.ReadFile(statePath)
@@ -91,11 +102,16 @@ func LoadState(runName string) (*RunState, error) {
 	}
 
 	// Initialize non-persisted fields
-	state.RunName = runName
+	if state.ID == "" {
+		state.ID = runID
+	}
+	if state.Name == "" {
+		state.Name = state.ID
+	}
 	state.artifactPaths = make(map[string]string)
 
 	// Scan artifacts directory and populate the map
-	artifactsDir := GetArtifactsDir(runName)
+	artifactsDir := GetArtifactsDir(runID)
 	if _, err := os.Stat(artifactsDir); err == nil {
 		entries, err := os.ReadDir(artifactsDir)
 		if err != nil {
@@ -171,7 +187,11 @@ func (rs *RunState) ReadArtifacts(names []string) (map[string]string, error) {
 
 // WriteArtifact writes content to an artifact file and updates the artifact registry
 func (rs *RunState) WriteArtifact(name, content string) error {
-	artifactsDir := GetArtifactsDir(rs.RunName)
+	if rs.ID == "" {
+		return fmt.Errorf("run ID is required to write artifacts")
+	}
+
+	artifactsDir := GetArtifactsDir(rs.ID)
 
 	// Create artifacts directory if it doesn't exist
 	if err := os.MkdirAll(artifactsDir, 0755); err != nil {
@@ -211,10 +231,10 @@ func ListRuns() ([]RunState, error) {
 			continue
 		}
 
-		runName := entry.Name()
+		runID := entry.Name()
 
 		// Try to load the run state
-		state, err := LoadState(runName)
+		state, err := LoadState(runID)
 		if err != nil {
 			// Skip runs that can't be loaded (might be incomplete or corrupted)
 			continue

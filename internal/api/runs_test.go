@@ -105,6 +105,12 @@ func TestGetRun_Success(t *testing.T) {
 	}
 
 	// validate repsonse
+	if response.Data.ID != "test-run" {
+		t.Errorf("Expected id 'test-run', got '%s'", response.Data.ID)
+	}
+	if response.Data.Name != "test-run" {
+		t.Errorf("Expected name 'test-run', got '%s'", response.Data.Name)
+	}
 	if response.Data.WorkflowName != "test-workflow" {
 		t.Errorf("Expected workflow_name 'test-workflow', got '%s'", response.Data.WorkflowName)
 	}
@@ -145,7 +151,8 @@ func TestPostRun_Create(t *testing.T) {
 	router := setupRouter()
 
 	body := `{
-		"workflow_name": "test-workflow"
+		"workflow_id": "test-workflow",
+		"name": "New Run"
 	}`
 
 	// post run
@@ -162,6 +169,12 @@ func TestPostRun_Create(t *testing.T) {
 	}
 
 	// validate response
+	if response.Data.ID != "new-run" {
+		t.Errorf("Expected run id 'new-run', got '%s'", response.Data.ID)
+	}
+	if response.Data.Name != "New Run" {
+		t.Errorf("Expected run name 'New Run', got '%s'", response.Data.Name)
+	}
 	if response.Data.WorkflowName != "test-workflow" {
 		t.Errorf("Expected workflow_name 'test-workflow', got '%s'", response.Data.WorkflowName)
 	}
@@ -177,6 +190,9 @@ func TestPostRun_Create(t *testing.T) {
 	if state.WorkflowName != "test-workflow" {
 		t.Errorf("Created run has wrong workflow_name: %s", state.WorkflowName)
 	}
+	if state.Name != "New Run" {
+		t.Errorf("Created run has wrong name: %s", state.Name)
+	}
 }
 
 // TestPostRun_MissingWorkflowName tests creating a run without workflow_name
@@ -186,7 +202,7 @@ func TestPostRun_MissingWorkflowName(t *testing.T) {
 
 	router := setupRouter()
 
-	body := `{}`
+	body := `{"name": "Display"}`
 
 	// post run
 	var response struct {
@@ -202,6 +218,29 @@ func TestPostRun_MissingWorkflowName(t *testing.T) {
 	}
 }
 
+// TestPostRun_MissingName tests creating a run without a display name
+func TestPostRun_MissingName(t *testing.T) {
+	cleanup := setupTestEnv(t)
+	defer cleanup()
+
+	createWorkflowFixture(t, "test-workflow", "Test Workflow")
+
+	router := setupRouter()
+
+	body := `{"workflow_name": "test-workflow"}`
+
+	var response struct {
+		Error *apiError         `json:"error"`
+		Data  workflow.RunState `json:"data"`
+	}
+	result := post(router, "/api/run/bad-run", body, &response)
+
+	err := expectStatus(http.StatusBadRequest, result)
+	if err != nil {
+		t.Fatalf("%v\n%v", err, response)
+	}
+}
+
 // TestPostRun_WorkflowNotFound tests creating a run with non-existent workflow
 func TestPostRun_WorkflowNotFound(t *testing.T) {
 	cleanup := setupTestEnv(t)
@@ -210,7 +249,8 @@ func TestPostRun_WorkflowNotFound(t *testing.T) {
 	router := setupRouter()
 
 	body := `{
-		"workflow_name": "nonexistent-workflow"
+		"workflow_id": "nonexistent-workflow",
+		"name": "Bad Run"
 	}`
 
 	// post run

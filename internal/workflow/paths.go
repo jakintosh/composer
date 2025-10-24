@@ -64,13 +64,13 @@ func GetRunsDir() string {
 }
 
 // GetRunDir returns the path to a specific run's directory
-// (./.composer/runs/{runName}/)
-func GetRunDir(runName string) string {
-	return filepath.Join(GetRunsDir(), runName)
+// (./.composer/runs/{runID}/)
+func GetRunDir(runID string) string {
+	return filepath.Join(GetRunsDir(), runID)
 }
 
 // GetArtifactsDir returns the path to a specific run's artifacts directory
-// (./.composer/runs/{runName}/artifacts/)
-func GetArtifactsDir(runName string) string {
-	return filepath.Join(GetRunDir(runName), "artifacts")
+// (./.composer/runs/{runID}/artifacts/)
+func GetArtifactsDir(runID string) string {
+	return filepath.Join(GetRunDir(runID), "artifacts")
 }

@@ -130,10 +130,10 @@ func post(
 }
 
 // createWorkflowFixture creates a test workflow file in .composer/workflows/
-func createWorkflowFixture(t *testing.T, name, title string) {
+func createWorkflowFixture(t *testing.T, id, displayName string) {
 	t.Helper()
 
-	content := fmt.Sprintf(`title = "%s"
+	content := fmt.Sprintf(`display_name = "%s"
 description = "A test workflow"
 message = "Test message"
 
@@ -142,10 +142,10 @@ name = "step1"
 description = "First step"
 output = "result1"
 content = "Step 1 content"
-`, title)
+`, displayName)
 
 	workflowDir := filepath.Join(".composer", "workflows")
-	workflowPath := filepath.Join(workflowDir, name+".toml")
+	workflowPath := filepath.Join(workflowDir, id+".toml")
 
 	if err := os.WriteFile(workflowPath, []byte(content), 0644); err != nil {
 		t.Fatalf("Failed to create workflow fixture: %v", err)
@@ -153,17 +153,17 @@ content = "Step 1 content"
 }
 
 // createRunFixture creates a test run state in .composer/runs/
-func createRunFixture(t *testing.T, runName, workflowName string) {
+func createRunFixture(t *testing.T, runID, workflowID string) {
 	t.Helper()
 
 	// Load the workflow to create proper state
-	wf, _, err := workflow.LoadWorkflow(workflowName)
+	wf, _, err := workflow.LoadWorkflow(workflowID)
 	if err != nil {
 		t.Fatalf("Failed to load workflow for run fixture: %v", err)
 	}
 
 	// Create run state
-	state := workflow.NewRunState(wf, runName)
+	state := workflow.NewRunState(wf, runID, runID)
 	if err := state.Save(); err != nil {
 		t.Fatalf("Failed to save run fixture: %v", err)
 	}

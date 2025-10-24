@@ -223,13 +223,14 @@
     const form = document.getElementById("run-form");
     const workflowIdInput = document.getElementById("run-workflow-id");
     const workflowNameInput = document.getElementById("run-workflow-name");
-    const workflowIdDisplayInput = document.getElementById("run-workflow-id-display");
+    const runIdInput = document.getElementById("run-id");
     const runNameInput = document.getElementById("run-name");
+    const runIdPreview = document.getElementById("run-id-preview");
     const errorBanner = document.getElementById("run-form-error");
     const submitButton = document.getElementById("run-submit");
     const openButtons = document.querySelectorAll("[data-open-run-modal]");
 
-    if (!modal || !form || !workflowIdInput || !workflowNameInput || !workflowIdDisplayInput || !runNameInput || !errorBanner || !submitButton || openButtons.length === 0) {
+    if (!modal || !form || !workflowIdInput || !workflowNameInput || !runIdInput || !runNameInput || !runIdPreview || !errorBanner || !submitButton || openButtons.length === 0) {
       return;
     }
 
@@ -245,19 +246,44 @@
       errorBanner.classList.add("is-visible");
     };
 
+    const generateRunId = (raw) => {
+      if (!raw) {
+        return "";
+      }
+      const normalized = typeof raw.normalize === "function"
+        ? raw.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+        : raw;
+      return normalized
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    };
+
+    const updateRunId = () => {
+      const displayName = runNameInput.value;
+      const generated = generateRunId(displayName);
+      runIdInput.value = generated;
+      runIdPreview.textContent = generated || "—";
+    };
+
     const resetForm = () => {
       form.reset();
       clearError();
+      runIdPreview.textContent = "—";
+      runIdInput.value = "";
     };
 
     const openModal = (workflowId, workflowLabel) => {
       resetForm();
       workflowIdInput.value = workflowId;
       workflowNameInput.value = workflowLabel || workflowId;
-      workflowIdDisplayInput.value = workflowId;
-      if (workflowId) {
-        runNameInput.value = workflowId + "-run";
+      workflowIdInput.value = workflowId;
+      const baseLabel = workflowLabel || workflowId;
+      if (baseLabel) {
+        runNameInput.value = baseLabel + " Run";
       }
+      updateRunId();
       modal.classList.add("is-visible");
       modal.setAttribute("aria-hidden", "false");
       runNameInput.focus();
@@ -274,24 +300,30 @@
       clearError();
 
       const workflowId = workflowIdInput.value.trim();
-      const runName = runNameInput.value.trim();
+      const displayName = runNameInput.value.trim();
+      const runId = runIdInput.value.trim();
 
       if (!workflowId) {
         showError("Workflow is required to start a run.");
         return;
       }
-      if (!runName) {
-        showError("Run name is required.");
+      if (!displayName) {
+        showError("Display name is required.");
+        return;
+      }
+      if (!runId) {
+        showError("Display name must include at least one letter or number.");
         return;
       }
 
       const payload = {
-        workflow_name: workflowId,
+        workflow_id: workflowId,
+        name: displayName,
       };
 
       submitButton.disabled = true;
       try {
-        const response = await fetch("/api/run/" + encodeURIComponent(runName), {
+        const response = await fetch("/api/run/" + encodeURIComponent(runId), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -319,6 +351,8 @@
         submitButton.disabled = false;
       }
     };
+
+    runNameInput.addEventListener("input", updateRunId);
 
     openButtons.forEach((button) => {
       button.addEventListener("click", (event) => {

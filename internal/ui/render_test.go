@@ -41,7 +41,6 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 				{
 					DisplayName: "Example Workflow",
 					ID:          "wf-123",
-					Title:       "Example Workflow",
 					Description: "Example description",
 					Message:     "Example message",
 					StepNames:   []string{"Step A", "Step B"},
@@ -61,7 +60,8 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 			Header: columnHeaderViewModel{Title: "Runs"},
 			Runs: []runViewModel{
 				{
-					Name:         "run-1",
+					DisplayName:  "First Run",
+					ID:           "run-1",
 					StateLabel:   "ready",
 					StateClass:   "state-ready",
 					WorkflowName: "Example Workflow",
@@ -76,9 +76,10 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 			Header: columnHeaderViewModel{Title: "Waiting Tasks"},
 			Groups: []waitingTaskGroupViewModel{
 				{
-					RunName:      "run-1",
-					WorkflowName: "Example Workflow",
-					TaskCount:    1,
+					RunID:          "run-1",
+					RunDisplayName: "First Run",
+					WorkflowName:   "Example Workflow",
+					TaskCount:      1,
 					Tasks: []waitingTaskViewModel{
 						{
 							Name:        "Review doc",
@@ -96,7 +97,7 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 		t.Fatalf("renderer.Page() error = %v", err)
 	}
 
-	if got := buf.String(); !containsAll(got, "Workflow Dashboard", "Example Workflow", "run-1", "Waiting Tasks", "Review doc") {
+	if got := buf.String(); !containsAll(got, "Workflow Dashboard", "Example Workflow", "First Run", "run-1", "Waiting Tasks", "Review doc") {
 		t.Fatalf("rendered output missing expected content: %q", got)
 	}
 }

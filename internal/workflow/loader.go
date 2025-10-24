@@ -8,14 +8,14 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-// LoadWorkflow searches for a workflow file with the given name in the search paths
+// LoadWorkflow searches for a workflow file with the given id in the search paths
 // and loads it. Returns the workflow and the path where it was found, or an error.
-func LoadWorkflow(name string) (*Workflow, string, error) {
-	if name == "" {
-		return nil, "", fmt.Errorf("workflow name cannot be empty")
+func LoadWorkflow(id string) (*Workflow, string, error) {
+	if id == "" {
+		return nil, "", fmt.Errorf("workflow id cannot be empty")
 	}
 
-	filename := name + ".toml"
+	filename := id + ".toml"
 	searchPaths := GetWorkflowPaths()
 
 	for _, dir := range searchPaths {
@@ -41,13 +41,13 @@ func LoadWorkflow(name string) (*Workflow, string, error) {
 		}
 
 		// Set the workflow ID from the filename (without .toml extension)
-		workflow.ID = name
+		workflow.ID = id
 
 		return &workflow, workflowPath, nil
 	}
 
 	// Workflow not found in any search path
-	return nil, "", fmt.Errorf("workflow '%s' not found in any of the search paths: %v", name, searchPaths)
+	return nil, "", fmt.Errorf("workflow '%s' not found in any of the search paths: %v", id, searchPaths)
 }
 
 // ListWorkflows returns all workflows found in the search paths
@@ -75,19 +75,19 @@ func ListWorkflows() ([]Workflow, error) {
 				continue
 			}
 
-			// Extract workflow name (filename without .toml extension)
-			name := entry.Name()[:len(entry.Name())-5]
+			// Extract workflow ID (filename without .toml extension)
+			id := entry.Name()[:len(entry.Name())-5]
 
 			// Skip if we've already seen this workflow (earlier paths take precedence)
-			if seen[name] {
+			if seen[id] {
 				continue
 			}
-			seen[name] = true
+			seen[id] = true
 
 			// Load the workflow
-			workflow, _, err := LoadWorkflow(name)
+			workflow, _, err := LoadWorkflow(id)
 			if err != nil {
-				return nil, fmt.Errorf("error loading workflow %s: %w", name, err)
+				return nil, fmt.Errorf("error loading workflow %s: %w", id, err)
 			}
 
 			workflows = append(workflows, *workflow)

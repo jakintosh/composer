@@ -7,10 +7,11 @@
         <li class="list-item waiting-group">
           <details open>
             <summary>
-              <span class="item-title">{{.RunName}}</span>
+              <span class="item-title">{{.RunDisplayName}}</span>
               <span class="item-state">{{.TaskCount}} task{{if ne .TaskCount 1}}s{{end}}</span>
             </summary>
             <div class="item-details">
+              <p><strong>Run ID:</strong> {{.RunID}}</p>
               <p><strong>Workflow:</strong> {{.WorkflowName}}</p>
               <ul class="detail-list waiting-tasks">
                 {{range .Tasks}}

@@ -109,7 +109,7 @@ output = "initialized"
 
 func TestWorkflowWithSteps(t *testing.T) {
 	tomlData := `
-title = "Test Workflow"
+display_name = "Test Workflow"
 description = "A test workflow"
 message = "Testing steps"
 
@@ -137,8 +137,8 @@ output = "finished"
 		t.Fatalf("failed to unmarshal workflow: %v", err)
 	}
 
-	if workflow.Title != "Test Workflow" {
-		t.Errorf("Title = %v, want Test Workflow", workflow.Title)
+	if workflow.DisplayName != "Test Workflow" {
+		t.Errorf("DisplayName = %v, want Test Workflow", workflow.DisplayName)
 	}
 
 	if len(workflow.Steps) != 3 {

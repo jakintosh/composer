@@ -17,12 +17,17 @@ func TestNewRunState(t *testing.T) {
 		},
 	}
 
-	runName := "test-run"
-	state := NewRunState(workflow, runName)
+	runID := "test-run"
+	displayName := "Test Run"
+	state := NewRunState(workflow, runID, displayName)
 
-	// Check RunName is set
-	if state.RunName != runName {
-		t.Errorf("Expected RunName to be %s, got %s", runName, state.RunName)
+	// Check ID is set
+	if state.ID != runID {
+		t.Errorf("Expected ID to be %s, got %s", runID, state.ID)
+	}
+	// Check Name is set
+	if state.Name != displayName {
+		t.Errorf("Expected Name to be %s, got %s", displayName, state.Name)
 	}
 
 	// Check all steps are initialized as pending
@@ -44,7 +49,8 @@ func TestNewRunState(t *testing.T) {
 func TestSaveAndLoadState(t *testing.T) {
 	// Create a temporary run directory for testing
 	tempDir := t.TempDir()
-	runName := "test-run"
+	runID := "test-run"
+	displayName := "Test Run"
 
 	// Override GetRunDir for this test
 	originalGetwd := os.Getwd
@@ -56,8 +62,9 @@ func TestSaveAndLoadState(t *testing.T) {
 
 	// Create a state
 	state := &RunState{
+		ID:            runID,
+		Name:          displayName,
 		WorkflowName:  "test-workflow",
-		RunName:       runName,
 		artifactPaths: make(map[string]string),
 		StepStates: map[string]StepState{
 			"step1": {Status: StatusSucceeded},
@@ -73,13 +80,13 @@ func TestSaveAndLoadState(t *testing.T) {
 	}
 
 	// Verify the file exists
-	statePath := filepath.Join(tempDir, ".composer", "runs", runName, "state.json")
+	statePath := filepath.Join(tempDir, ".composer", "runs", runID, "state.json")
 	if _, err := os.Stat(statePath); os.IsNotExist(err) {
 		t.Fatalf("State file was not created at %s", statePath)
 	}
 
 	// Load the state back
-	loadedState, err := LoadState(runName)
+	loadedState, err := LoadState(runID)
 	if err != nil {
 		t.Fatalf("Failed to load state: %v", err)
 	}
@@ -100,7 +107,13 @@ func TestSaveAndLoadState(t *testing.T) {
 	}
 
 	if loadedState.WorkflowName != state.WorkflowName {
-		t.Errorf("Loaded workflow name is %s, expected %s", loadedState.WorkflowName, state.WorkflowName)
+		t.Errorf("Loaded workflow ID is %s, expected %s", loadedState.WorkflowName, state.WorkflowName)
+	}
+	if loadedState.ID != runID {
+		t.Errorf("Loaded run ID is %s, expected %s", loadedState.ID, runID)
+	}
+	if loadedState.Name != displayName {
+		t.Errorf("Loaded run name is %s, expected %s", loadedState.Name, displayName)
 	}
 }
 
@@ -169,12 +182,12 @@ func TestWriteAndReadArtifact(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 	artifactName := "test-artifact"
 	content := "This is test content\nWith multiple lines"
 
 	state := &RunState{
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 	}
 
@@ -185,7 +198,7 @@ func TestWriteAndReadArtifact(t *testing.T) {
 	}
 
 	// Verify file was created
-	artifactPath := filepath.Join(GetArtifactsDir(runName), artifactName)
+	artifactPath := filepath.Join(GetArtifactsDir(runID), artifactName)
 	if _, err := os.Stat(artifactPath); os.IsNotExist(err) {
 		t.Fatalf("Artifact file was not created at %s", artifactPath)
 	}
@@ -206,10 +219,10 @@ func TestHasArtifact(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 
 	state := &RunState{
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 	}
 
@@ -236,10 +249,10 @@ func TestListArtifacts(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 
 	state := &RunState{
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 	}
 
@@ -287,10 +300,10 @@ func TestReadArtifacts(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 
 	state := &RunState{
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 	}
 
@@ -328,10 +341,10 @@ func TestReadArtifactsNonExistent(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 
 	state := &RunState{
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 	}
 
@@ -347,15 +360,15 @@ func TestWriteArtifactCreatesDirectory(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "new-run"
+	runID := "new-run"
 
 	state := &RunState{
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 	}
 
 	// Verify artifacts directory doesn't exist yet
-	artifactsDir := GetArtifactsDir(runName)
+	artifactsDir := GetArtifactsDir(runID)
 	if _, err := os.Stat(artifactsDir); !os.IsNotExist(err) {
 		t.Fatalf("Artifacts directory should not exist yet")
 	}
@@ -376,10 +389,10 @@ func TestReadArtifactEmpty(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 
 	state := &RunState{
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 	}
 
@@ -404,12 +417,12 @@ func TestLoadStatePopulatesArtifactRegistry(t *testing.T) {
 	tempDir := t.TempDir()
 	os.Chdir(tempDir)
 
-	runName := "test-run"
+	runID := "test-run"
 
 	// Create a state with some artifacts
 	state := &RunState{
 		WorkflowName:  "test-workflow",
-		RunName:       runName,
+		ID:            runID,
 		artifactPaths: make(map[string]string),
 		StepStates: map[string]StepState{
 			"step1": {Status: StatusSucceeded},
@@ -428,7 +441,7 @@ func TestLoadStatePopulatesArtifactRegistry(t *testing.T) {
 	}
 
 	// Load the state back
-	loadedState, err := LoadState(runName)
+	loadedState, err := LoadState(runID)
 	if err != nil {
 		t.Fatalf("Failed to load state: %v", err)
 	}

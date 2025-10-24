@@ -126,12 +126,12 @@ func TestGetRunsDir(t *testing.T) {
 }
 
 func TestGetRunDir(t *testing.T) {
-	runName := "test-run"
-	runDir := GetRunDir(runName)
+	runID := "test-run"
+	runDir := GetRunDir(runID)
 
 	// Should be ./.composer/runs/test-run in current working directory
 	cwd, _ := os.Getwd()
-	expected := filepath.Join(cwd, ".composer", "runs", runName)
+	expected := filepath.Join(cwd, ".composer", "runs", runID)
 	if runDir != expected {
 		t.Errorf("Expected run dir to be %s, got %s", expected, runDir)
 	}
@@ -139,8 +139,8 @@ func TestGetRunDir(t *testing.T) {
 
 func TestGetRunDirWithDifferentNames(t *testing.T) {
 	tests := []struct {
-		name    string
-		runName string
+		name  string
+		runID string
 	}{
 		{"simple name", "my-run"},
 		{"with numbers", "run-123"},
@@ -151,8 +151,8 @@ func TestGetRunDirWithDifferentNames(t *testing.T) {
 	cwd, _ := os.Getwd()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runDir := GetRunDir(tt.runName)
-			expected := filepath.Join(cwd, ".composer", "runs", tt.runName)
+			runDir := GetRunDir(tt.runID)
+			expected := filepath.Join(cwd, ".composer", "runs", tt.runID)
 			if runDir != expected {
 				t.Errorf("Expected run dir to be %s, got %s", expected, runDir)
 			}

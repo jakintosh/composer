@@ -43,14 +43,14 @@ type columnHeaderViewModel struct {
 type workflowViewModel struct {
 	DisplayName string
 	ID          string
-	Title       string
 	Description string
 	Message     string
 	StepNames   []string
 }
 
 type runViewModel struct {
-	Name         string
+	DisplayName  string
+	ID           string
 	StateLabel   string
 	StateClass   string
 	WorkflowName string
@@ -79,10 +79,11 @@ type waitingTaskColumnViewModel struct {
 }
 
 type waitingTaskGroupViewModel struct {
-	RunName      string
-	WorkflowName string
-	TaskCount    int
-	Tasks        []waitingTaskViewModel
+	RunID          string
+	RunDisplayName string
+	WorkflowName   string
+	TaskCount      int
+	Tasks          []waitingTaskViewModel
 }
 
 type waitingTaskViewModel struct {
@@ -110,20 +111,24 @@ func buildDashboardViewModel(
 	workflowVMs := make([]workflowViewModel, 0, len(workflows))
 	for _, wf := range workflows {
 		workflowVMs = append(workflowVMs, workflowViewModel{
-			DisplayName: workflowDisplayName(wf),
+			DisplayName: strings.TrimSpace(wf.DisplayName),
 			ID:          strings.TrimSpace(wf.ID),
-			Title:       strings.TrimSpace(wf.Title),
 			Description: strings.TrimSpace(wf.Description),
 			Message:     strings.TrimSpace(wf.Message),
 			StepNames:   collectStepNames(wf.Steps),
 		})
 	}
-	sort.Slice(workflowVMs, func(i, j int) bool { return workflowVMs[i].DisplayName < workflowVMs[j].DisplayName })
+	sort.Slice(workflowVMs, func(i, j int) bool {
+		return workflowVMs[i].DisplayName < workflowVMs[j].DisplayName
+	})
 
 	runVMs := make([]runViewModel, 0, len(runs))
 	for _, run := range runs {
 		status := summarizeRunState(run)
 		stepNames := sortedStepNames(run.StepStates)
+
+		displayName := strings.TrimSpace(run.Name)
+		runID := strings.TrimSpace(run.ID)
 
 		steps := make([]runStepViewModel, 0, len(stepNames))
 		for _, name := range stepNames {
@@ -136,18 +141,27 @@ func buildDashboardViewModel(
 		}
 
 		runVMs = append(runVMs, runViewModel{
-			Name:         strings.TrimSpace(run.RunName),
+			DisplayName:  displayName,
+			ID:           runID,
 			StateLabel:   status.Label,
 			StateClass:   status.Class,
 			WorkflowName: strings.TrimSpace(run.WorkflowName),
 			Steps:        steps,
 		})
 	}
-	sort.Slice(runVMs, func(i, j int) bool { return runVMs[i].Name < runVMs[j].Name })
+	sort.Slice(runVMs, func(i, j int) bool {
+		return runVMs[i].DisplayName < runVMs[j].DisplayName
+	})
 
 	taskGroupVMs := make([]waitingTaskGroupViewModel, 0, len(waitingTasks))
 	for _, run := range runs {
-		tasks := waitingTasks[run.RunName]
+		runID := strings.TrimSpace(run.ID)
+		displayName := strings.TrimSpace(run.Name)
+		if displayName == "" {
+			displayName = runID
+		}
+
+		tasks := waitingTasks[runID]
 		if len(tasks) == 0 {
 			continue
 		}
@@ -161,16 +175,21 @@ func buildDashboardViewModel(
 			})
 		}
 
-		sort.Slice(taskVMs, func(i, j int) bool { return taskVMs[i].Name < taskVMs[j].Name })
+		sort.Slice(taskVMs, func(i, j int) bool {
+			return taskVMs[i].Name < taskVMs[j].Name
+		})
 
 		taskGroupVMs = append(taskGroupVMs, waitingTaskGroupViewModel{
-			RunName:      strings.TrimSpace(run.RunName),
-			WorkflowName: strings.TrimSpace(run.WorkflowName),
-			TaskCount:    len(taskVMs),
-			Tasks:        taskVMs,
+			RunID:          runID,
+			RunDisplayName: displayName,
+			WorkflowName:   strings.TrimSpace(run.WorkflowName),
+			TaskCount:      len(taskVMs),
+			Tasks:          taskVMs,
 		})
 	}
-	sort.Slice(taskGroupVMs, func(i, j int) bool { return taskGroupVMs[i].RunName < taskGroupVMs[j].RunName })
+	sort.Slice(taskGroupVMs, func(i, j int) bool {
+		return taskGroupVMs[i].RunDisplayName < taskGroupVMs[j].RunDisplayName
+	})
 
 	return dashboardViewModel{
 		Sidebar: sidebarViewModel{
@@ -236,16 +255,6 @@ func sortedStepNames(stepStates map[string]workflow.StepState) []string {
 	}
 	sort.Strings(names)
 	return names
-}
-
-func workflowDisplayName(wf workflow.Workflow) string {
-	if title := strings.TrimSpace(wf.Title); title != "" {
-		return title
-	}
-	if strings.TrimSpace(wf.ID) != "" {
-		return wf.ID
-	}
-	return "Untitled workflow"
 }
 
 func stateClassForStatus(status workflow.StepStatus) string {

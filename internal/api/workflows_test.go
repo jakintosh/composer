@@ -65,10 +65,10 @@ func TestGetWorkflows_Multiple(t *testing.T) {
 	foundFirst := false
 	foundSecond := false
 	for _, wf := range response.Data {
-		if wf.ID == "workflow1" && wf.Title == "First Workflow" {
+		if wf.ID == "workflow1" && wf.DisplayName == "First Workflow" {
 			foundFirst = true
 		}
-		if wf.ID == "workflow2" && wf.Title == "Second Workflow" {
+		if wf.ID == "workflow2" && wf.DisplayName == "Second Workflow" {
 			foundSecond = true
 		}
 	}
@@ -107,8 +107,8 @@ func TestGetWorkflow_Success(t *testing.T) {
 	if response.Data.ID != "test-workflow" {
 		t.Errorf("Expected ID 'test-workflow', got '%s'", response.Data.ID)
 	}
-	if response.Data.Title != "Test Workflow" {
-		t.Errorf("Expected title 'Test Workflow', got '%s'", response.Data.Title)
+	if response.Data.DisplayName != "Test Workflow" {
+		t.Errorf("Expected display name 'Test Workflow', got '%s'", response.Data.DisplayName)
 	}
 }
 
@@ -142,7 +142,7 @@ func TestPostWorkflow_Create(t *testing.T) {
 
 	// setup
 	body := `{
-		"title": "New Workflow",
+		"display_name": "New Workflow",
 		"description": "A new test workflow",
 		"message": "Hello",
 		"steps": [
@@ -172,8 +172,8 @@ func TestPostWorkflow_Create(t *testing.T) {
 	if response.Data.ID != "new-workflow" {
 		t.Errorf("Expected ID 'new-workflow', got '%s'", response.Data.ID)
 	}
-	if response.Data.Title != "New Workflow" {
-		t.Errorf("Expected title 'New Workflow', got '%s'", response.Data.Title)
+	if response.Data.DisplayName != "New Workflow" {
+		t.Errorf("Expected display name 'New Workflow', got '%s'", response.Data.DisplayName)
 	}
 	if len(response.Data.Steps) != 1 {
 		t.Errorf("Expected 1 step, got %d", len(response.Data.Steps))
@@ -184,8 +184,8 @@ func TestPostWorkflow_Create(t *testing.T) {
 	if err2 != nil {
 		t.Errorf("Failed to load saved workflow: %v", err2)
 	}
-	if wf.Title != "New Workflow" {
-		t.Errorf("Saved workflow has wrong title: %s", wf.Title)
+	if wf.DisplayName != "New Workflow" {
+		t.Errorf("Saved workflow has wrong display name: %s", wf.DisplayName)
 	}
 }
 
@@ -198,7 +198,7 @@ func TestPostWorkflow_InvalidJSON(t *testing.T) {
 
 	// setup - malformed JSON
 	body := `{
-		"title": "Invalid
+		"display_name": "Invalid
 		missing closing brace
 	`
 
@@ -228,7 +228,7 @@ func TestPostWorkflow_Update(t *testing.T) {
 
 	// Update with new title
 	body := `{
-		"title": "Updated Title",
+		"display_name": "Updated Display Name",
 		"description": "Updated description",
 		"message": "Updated message"
 	}`
@@ -247,8 +247,8 @@ func TestPostWorkflow_Update(t *testing.T) {
 	}
 
 	// validate response
-	if response.Data.Title != "Updated Title" {
-		t.Errorf("Expected title 'Updated Title', got '%s'", response.Data.Title)
+	if response.Data.DisplayName != "Updated Display Name" {
+		t.Errorf("Expected display name 'Updated Display Name', got '%s'", response.Data.DisplayName)
 	}
 
 	// Verify workflow was actually updated
@@ -256,7 +256,7 @@ func TestPostWorkflow_Update(t *testing.T) {
 	if err2 != nil {
 		t.Errorf("Failed to load updated workflow: %v", err2)
 	}
-	if wf.Title != "Updated Title" {
-		t.Errorf("Updated workflow has wrong title: %s", wf.Title)
+	if wf.DisplayName != "Updated Display Name" {
+		t.Errorf("Updated workflow has wrong display name: %s", wf.DisplayName)
 	}
 }
