@@ -4,31 +4,18 @@
   {{if .Groups}}
     <ul class="item-list waiting-list">
       {{range .Groups}}
-        <li class="list-item waiting-group">
-          <details open>
-            <summary>
-              <span class="item-title">{{.RunDisplayName}}</span>
-              <span class="item-state">{{.TaskCount}} task{{if ne .TaskCount 1}}s{{end}}</span>
-            </summary>
-            <div class="item-details">
-              <p><strong>Run ID:</strong> {{.RunID}}</p>
-              <p><strong>Workflow:</strong> {{.WorkflowName}}</p>
-              <ul class="detail-list waiting-tasks">
-                {{range .Tasks}}
-                  <li class="waiting-task">
-                    <div class="waiting-task-name">{{.Name}}</div>
-                    {{if .Description}}
-                      <div class="waiting-task-description">{{.Description}}</div>
-                    {{end}}
-                    {{if .Prompt}}
-                      <pre class="waiting-task-prompt">{{.Prompt}}</pre>
-                    {{end}}
-                  </li>
-                {{end}}
-              </ul>
-            </div>
-          </details>
+        <li class="waiting-run-header">
+          <span class="waiting-run-title">{{.RunDisplayName}}</span>
+          <span class="waiting-run-divider" aria-hidden="true"></span>
         </li>
+        {{range .Tasks}}
+          <li class="waiting-task">
+            <div class="waiting-task-name">{{.Name}}</div>
+            {{if .Description}}
+              <div class="waiting-task-description">{{.Description}}</div>
+            {{end}}
+          </li>
+        {{end}}
       {{end}}
     </ul>
   {{else}}

@@ -128,9 +128,6 @@ func buildDashboardViewModel(
 		stepNames := sortedStepNames(run.StepStates)
 
 		displayName := strings.TrimSpace(run.Name)
-		if displayName == "" {
-			displayName = strings.TrimSpace(run.ID)
-		}
 		runID := strings.TrimSpace(run.ID)
 
 		steps := make([]runStepViewModel, 0, len(stepNames))

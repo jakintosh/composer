@@ -312,7 +312,7 @@ func TestPostRunTick_Success(t *testing.T) {
 		} `json:"data"`
 	}
 
-	result := post(router, "/api/runs/test-run/tick", "", &response)
+	result := post(router, "/api/run/test-run/tick", "", &response)
 
 	if err := expectStatus(http.StatusOK, result); err != nil {
 		t.Fatalf("%v\n%v", err, response)

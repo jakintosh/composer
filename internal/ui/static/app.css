@@ -295,19 +295,30 @@ h2 {
   font-weight: 500;
 }
 
-.waiting-group summary {
+.waiting-run-header {
+  display: flex;
   align-items: center;
-}
-
-.waiting-group .item-state {
-  font-weight: 500;
+  gap: 0.6rem;
+  margin: 1rem 0 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: #bbbbbb;
 }
 
-.waiting-tasks {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+.waiting-run-header:first-child {
+  margin-top: 0.4rem;
+}
+
+.waiting-run-title {
+  white-space: nowrap;
+}
+
+.waiting-run-divider {
+  flex: 1;
+  height: 1px;
+  background: #2d2d2d;
 }
 
 .waiting-task {
@@ -315,6 +326,7 @@ h2 {
   border: 1px solid #2d2d2d;
   border-radius: 4px;
   padding: 0.5rem 0.6rem;
+  margin: 0 0 0.6rem;
 }
 
 .waiting-task-name {
