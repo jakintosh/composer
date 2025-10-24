@@ -5,3 +5,6 @@ build: build-daemon
 
 build-daemon:
 	go build -o bin/composerd ./cmd/composerd
+
+rund: build-daemon
+	./bin/composerd
