@@ -101,13 +101,6 @@ func LoadState(runID string) (*RunState, error) {
 		return nil, fmt.Errorf("failed to unmarshal state: %w", err)
 	}
 
-	// Initialize non-persisted fields
-	if state.ID == "" {
-		state.ID = runID
-	}
-	if state.Name == "" {
-		state.Name = state.ID
-	}
 	state.artifactPaths = make(map[string]string)
 
 	// Scan artifacts directory and populate the map
