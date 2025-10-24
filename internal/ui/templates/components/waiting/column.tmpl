@@ -1,21 +1,25 @@
 {{define "components/waiting/column"}}
-<section class="column waiting-column">
+<section class="panel panel--muted">
   {{template "components/ui/column_header" .Header}}
   {{if .Groups}}
-    <ul class="item-list waiting-list">
+    <ul class="panel__list waiting-list">
       {{range .Groups}}
-        <li class="waiting-run-header">
-          <span class="waiting-run-title">{{.RunDisplayName}}</span>
-          <span class="waiting-run-divider" aria-hidden="true"></span>
-        </li>
-        {{range .Tasks}}
-          <li class="waiting-task">
-            <div class="waiting-task-name">{{.Name}}</div>
-            {{if .Description}}
-              <div class="waiting-task-description">{{.Description}}</div>
+        <li>
+          <div class="waiting-group__header">
+            <span>{{.RunDisplayName}}</span>
+            <span class="waiting-group__divider" aria-hidden="true"></span>
+          </div>
+          <ul class="waiting-group__tasks">
+            {{range .Tasks}}
+              <li class="card card--compact waiting-task">
+                <div class="waiting-task__name">{{.Name}}</div>
+                {{if .Description}}
+                  <div class="waiting-task__description">{{.Description}}</div>
+                {{end}}
+              </li>
             {{end}}
-          </li>
-        {{end}}
+          </ul>
+        </li>
       {{end}}
     </ul>
   {{else}}

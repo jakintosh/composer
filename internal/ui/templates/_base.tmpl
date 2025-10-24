@@ -9,12 +9,12 @@
   {{block "head" .}}{{end}}
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="app-sidebar">
+  <div class="ui-shell">
+    <aside class="ui-shell__sidebar">
       {{template "components/navigation/sidebar" .Sidebar}}
     </aside>
-    <main class="app-main">
-      <div class="app-content">
+    <main class="ui-shell__main">
+      <div class="ui-shell__content">
         {{block "content" .}}{{end}}
       </div>
     </main>

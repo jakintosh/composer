@@ -1,17 +1,17 @@
 {{define "components/run/column"}}
-<section class="column">
+<section class="panel">
   {{template "components/ui/column_header" .Header}}
   {{if .Runs}}
-    <ul class="item-list">
+    <ul class="panel__list">
       {{range .Runs}}
-        <li class="list-item">
-          <details>
-            <summary>
-              <span class="item-title">{{.DisplayName}}</span>
-              <span class="item-state state {{.StateClass}}">{{.StateLabel}}</span>
+        <li class="card card--collapsible">
+          <details class="collapsible">
+            <summary class="collapsible__summary">
+              <span class="collapsible__title">{{.DisplayName}}</span>
+              <span class="status-badge {{.StateClass}}">{{.StateLabel}}</span>
               {{if .ID}}
                 <button type="button"
-                        class="run-tick-button"
+                        class="button button--primary button--sm run-tick-button"
                         data-run-id="{{.ID}}"
                         data-run-display="{{.DisplayName}}"
                         aria-label="Run tick for {{.DisplayName}}">
@@ -19,16 +19,16 @@
                 </button>
               {{end}}
             </summary>
-            <div class="item-details">
+            <div class="collapsible__content">
               <p><strong>Run ID:</strong> {{.ID}}</p>
               <p><strong>Workflow:</strong> {{.WorkflowName}}</p>
               {{if .Steps}}
                 <h3>Steps</h3>
-                <ul class="detail-list">
+                <ul class="data-list">
                   {{range .Steps}}
                     <li>
                       <span>{{.Name}}</span>
-                      <span class="state {{.StatusClass}}">— {{.Status}}</span>
+                      <span class="status-badge {{.StatusClass}}">{{.Status}}</span>
                     </li>
                   {{end}}
                 </ul>

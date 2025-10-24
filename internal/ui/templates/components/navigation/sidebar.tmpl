@@ -1,14 +1,14 @@
 {{define "components/navigation/sidebar"}}
-  <div class="sidebar-inner">
+  <div class="sidebar">
     {{with .Title}}
-      <div class="sidebar-brand">{{.}}</div>
+      <div class="sidebar__brand">{{.}}</div>
     {{end}}
-    <nav class="sidebar-nav">
-      <ul>
+    <nav class="sidebar__nav">
+      <ul class="sidebar__list">
         {{range .Links}}
           <li>
             <a
-              class="sidebar-link{{if .Active}} is-active{{end}}"
+              class="sidebar__link{{if .Active}} sidebar__link--active{{end}}"
               href="{{.Href}}"
             >{{.Label}}</a>
           </li>

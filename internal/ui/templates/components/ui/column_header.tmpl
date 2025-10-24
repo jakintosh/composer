@@ -1,10 +1,10 @@
 {{define "components/ui/column_header"}}
-  <div class="column-header">
-    <h2>{{.Title}}</h2>
-    <div class="column-actions">
+  <header class="panel__header">
+    <h2 class="panel__title">{{.Title}}</h2>
+    <div class="panel__actions">
       {{range .Actions}}
         {{template "components/ui/add_button" .}}
       {{end}}
     </div>
-  </div>
+  </header>
 {{end}}

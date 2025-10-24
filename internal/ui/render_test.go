@@ -29,7 +29,7 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 				Actions: []uiButtonViewModel{
 					{
 						ID:        "open-workflow-modal",
-						Class:     "primary-action",
+						Class:     "button--accent button--icon",
 						Title:     "Create workflow",
 						AriaLabel: "Create workflow",
 						Type:      "button",
@@ -50,7 +50,7 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 		WorkflowModal: workflowModalViewModel{
 			AddStepButton: uiButtonViewModel{
 				ID:       "add-workflow-step",
-				Class:    "add-step-button",
+				Class:    "button--outline button--sm",
 				Label:    "Add Step",
 				Type:     "button",
 				IconSize: 16,
@@ -63,11 +63,11 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 					DisplayName:  "First Run",
 					ID:           "run-1",
 					StateLabel:   "ready",
-					StateClass:   "state-ready",
+					StateClass:   "status-badge--ready",
 					WorkflowName: "Example Workflow",
 					Steps: []runStepViewModel{
-						{Name: "Step A", Status: "pending", StatusClass: "state-pending"},
-						{Name: "Step B", Status: "ready", StatusClass: "state-ready"},
+						{Name: "Step A", Status: "pending", StatusClass: "status-badge--pending"},
+						{Name: "Step B", Status: "ready", StatusClass: "status-badge--ready"},
 					},
 				},
 			},

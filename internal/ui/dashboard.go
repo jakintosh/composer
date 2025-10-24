@@ -208,7 +208,7 @@ func buildDashboardViewModel(
 				Actions: []uiButtonViewModel{
 					{
 						ID:        "open-workflow-modal",
-						Class:     "primary-action",
+						Class:     "button--accent button--icon",
 						Title:     "Create workflow",
 						AriaLabel: "Create workflow",
 						Type:      "button",
@@ -221,7 +221,7 @@ func buildDashboardViewModel(
 		WorkflowModal: workflowModalViewModel{
 			AddStepButton: uiButtonViewModel{
 				ID:       "add-workflow-step",
-				Class:    "add-step-button",
+				Class:    "button--outline button--sm",
 				Label:    "Add Step",
 				Type:     "button",
 				IconSize: 16,
@@ -260,21 +260,21 @@ func sortedStepNames(stepStates map[string]workflow.StepState) []string {
 func stateClassForStatus(status workflow.StepStatus) string {
 	switch status {
 	case workflow.StatusFailed:
-		return "state-failed"
+		return "status-badge--failed"
 	case workflow.StatusSucceeded:
-		return "state-succeeded"
+		return "status-badge--succeeded"
 	case workflow.StatusReady:
-		return "state-ready"
+		return "status-badge--ready"
 	case workflow.StatusPending:
-		return "state-pending"
+		return "status-badge--pending"
 	default:
-		return "state-unknown"
+		return "status-badge--unknown"
 	}
 }
 
 func summarizeRunState(rs workflow.RunState) runStatus {
 	if len(rs.StepStates) == 0 {
-		return runStatus{Label: "pending", Class: "state-pending"}
+		return runStatus{Label: "pending", Class: "status-badge--pending"}
 	}
 
 	allSucceeded := len(rs.StepStates) > 0
@@ -284,7 +284,7 @@ func summarizeRunState(rs workflow.RunState) runStatus {
 	for _, step := range rs.StepStates {
 		switch step.Status {
 		case workflow.StatusFailed:
-			return runStatus{Label: "failed", Class: "state-failed"}
+			return runStatus{Label: "failed", Class: "status-badge--failed"}
 		case workflow.StatusSucceeded:
 			// still successful unless other statuses contradict
 		case workflow.StatusReady:
@@ -299,13 +299,13 @@ func summarizeRunState(rs workflow.RunState) runStatus {
 	}
 
 	if allSucceeded {
-		return runStatus{Label: "succeeded", Class: "state-succeeded"}
+		return runStatus{Label: "succeeded", Class: "status-badge--succeeded"}
 	}
 	if hasReady {
-		return runStatus{Label: "ready", Class: "state-ready"}
+		return runStatus{Label: "ready", Class: "status-badge--ready"}
 	}
 	if hasPending {
-		return runStatus{Label: "pending", Class: "state-pending"}
+		return runStatus{Label: "pending", Class: "status-badge--pending"}
 	}
-	return runStatus{Label: "unknown", Class: "state-unknown"}
+	return runStatus{Label: "unknown", Class: "status-badge--unknown"}
 }
