@@ -16,6 +16,7 @@ func buildRunsRouter(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/run/{id}", handleGetRun)
 	mux.HandleFunc("POST /api/run/{id}", handlePostRun)
 	mux.HandleFunc("GET /api/run/{id}/tasks", handleGetRunTasks)
+	mux.HandleFunc("POST /api/run/{id}/tick", handlePostRunTick)
 }
 
 // handleGetRuns returns a list of all runs
@@ -128,4 +129,45 @@ func handleGetRunsTasks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeData(w, http.StatusOK, result)
+}
+
+// handlePostRunTick executes a single tick for the specified run
+func handlePostRunTick(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	// Load current run state to identify its workflow
+	state, err := workflow.LoadState(id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, fmt.Sprintf("Run not found: %v", err))
+		return
+	}
+
+	// Load workflow associated with this run
+	wf, _, err := workflow.LoadWorkflow(state.WorkflowName)
+	if err != nil {
+		writeError(w, http.StatusNotFound, fmt.Sprintf("Workflow not found: %v", err))
+		return
+	}
+
+	// Execute tick
+	complete, err := orchestrator.Tick(wf, id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to tick run: %v", err))
+		return
+	}
+
+	// Reload state to include updates from tick
+	updatedState, err := workflow.LoadState(id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to load updated run state: %v", err))
+		return
+	}
+
+	writeData(w, http.StatusOK, struct {
+		Complete bool               `json:"complete"`
+		State    *workflow.RunState `json:"state"`
+	}{
+		Complete: complete,
+		State:    updatedState,
+	})
 }

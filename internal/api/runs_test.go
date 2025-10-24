@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
 	"composer/internal/orchestrator"
@@ -289,6 +290,81 @@ func TestPostRun_InvalidJSON(t *testing.T) {
 	// verify result
 	err := expectStatus(http.StatusBadRequest, result)
 	if err != nil {
+		t.Fatalf("%v\n%v", err, response)
+	}
+}
+
+// TestPostRunTick_Success ensures a tick runs and returns updated state
+func TestPostRunTick_Success(t *testing.T) {
+	cleanup := setupTestEnv(t)
+	defer cleanup()
+
+	createWorkflowFixture(t, "test-workflow", "Test Workflow")
+	createRunFixture(t, "test-run", "test-workflow")
+
+	router := setupRouter()
+
+	var response struct {
+		Error *apiError `json:"error"`
+		Data  struct {
+			Complete bool              `json:"complete"`
+			State    workflow.RunState `json:"state"`
+		} `json:"data"`
+	}
+
+	result := post(router, "/api/runs/test-run/tick", "", &response)
+
+	if err := expectStatus(http.StatusOK, result); err != nil {
+		t.Fatalf("%v\n%v", err, response)
+	}
+
+	if response.Data.Complete != true {
+		t.Errorf("expected tick to mark run complete")
+	}
+
+	step, ok := response.Data.State.StepStates["step1"]
+	if !ok {
+		t.Fatalf("updated state missing step1")
+	}
+	if step.Status != workflow.StatusSucceeded {
+		t.Errorf("expected step1 to succeed, got %s", step.Status)
+	}
+}
+
+// TestPostRunTick_RunNotFound ensures missing run returns 404
+func TestPostRunTick_RunNotFound(t *testing.T) {
+	cleanup := setupTestEnv(t)
+	defer cleanup()
+
+	router := setupRouter()
+
+	var response apiResponse
+	result := post(router, "/api/runs/missing/tick", "", &response)
+
+	if err := expectStatus(http.StatusNotFound, result); err != nil {
+		t.Fatalf("%v\n%v", err, response)
+	}
+}
+
+// TestPostRunTick_WorkflowNotFound ensures missing workflow returns 404
+func TestPostRunTick_WorkflowNotFound(t *testing.T) {
+	cleanup := setupTestEnv(t)
+	defer cleanup()
+
+	createWorkflowFixture(t, "test-workflow", "Test Workflow")
+	createRunFixture(t, "test-run", "test-workflow")
+
+	// Remove workflow file to simulate missing workflow
+	if err := os.Remove(".composer/workflows/test-workflow.toml"); err != nil {
+		t.Fatalf("failed to remove workflow file: %v", err)
+	}
+
+	router := setupRouter()
+
+	var response apiResponse
+	result := post(router, "/api/runs/test-run/tick", "", &response)
+
+	if err := expectStatus(http.StatusNotFound, result); err != nil {
 		t.Fatalf("%v\n%v", err, response)
 	}
 }

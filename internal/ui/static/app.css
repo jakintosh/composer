@@ -230,6 +230,42 @@ h2 {
   transform: translateY(0);
 }
 
+.run-tick-button {
+  background: #3498db;
+  border: none;
+  color: #0f0f0f;
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.run-tick-button:focus {
+  outline: 2px solid rgba(52, 152, 219, 0.9);
+  outline-offset: 2px;
+}
+
+.run-tick-button:hover {
+  transform: translateY(-1px);
+}
+
+.run-tick-button:active {
+  transform: translateY(0);
+}
+
+.run-tick-button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.run-tick-button.has-error {
+  background: #ff6b6b;
+  color: #0f0f0f;
+}
+
 .item-details {
   padding: 0.6rem 0.8rem 0.8rem;
   font-size: 0.95rem;

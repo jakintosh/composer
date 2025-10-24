@@ -1,6 +1,7 @@
 (function () {
   initWorkflowModal();
   initRunModal();
+  initRunTickButtons();
 
   function initWorkflowModal() {
     const modal = document.getElementById("workflow-modal");
@@ -383,6 +384,61 @@
       if (event.key === "Escape" && modal.classList.contains("is-visible")) {
         closeModal();
       }
+    });
+  }
+
+  function initRunTickButtons() {
+    const buttons = document.querySelectorAll(".run-tick-button");
+    if (buttons.length === 0) {
+      return;
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const runId = button.getAttribute("data-run-id");
+        if (!runId) {
+          return;
+        }
+
+        const originalLabel = button.textContent;
+        const runDisplay = button.getAttribute("data-run-display") || runId;
+
+        button.classList.remove("has-error");
+        button.removeAttribute("title");
+        button.disabled = true;
+        button.textContent = "Ticking...";
+
+        try {
+          const response = await fetch("/api/run/" + encodeURIComponent(runId) + "/tick", {
+            method: "POST",
+          });
+
+          if (!response.ok) {
+            let message = "Failed to tick " + runDisplay + ".";
+            try {
+              const data = await response.json();
+              if (data && data.error && data.error.message) {
+                message = data.error.message;
+              }
+            } catch (_ignore) {
+              // Ignore JSON parsing errors on failure
+            }
+            throw new Error(message);
+          }
+
+          window.location.reload();
+        } catch (error) {
+          const message = error instanceof Error && error.message ? error.message : "Failed to tick " + runDisplay + ".";
+          button.disabled = false;
+          button.textContent = originalLabel;
+          button.classList.add("has-error");
+          button.setAttribute("title", message);
+          console.error(message);
+        }
+      });
     });
   }
 })();

@@ -97,7 +97,7 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 		t.Fatalf("renderer.Page() error = %v", err)
 	}
 
-	if got := buf.String(); !containsAll(got, "Workflow Dashboard", "Example Workflow", "First Run", "run-1", "Waiting Tasks", "Review doc") {
+	if got := buf.String(); !containsAll(got, "Workflow Dashboard", "Example Workflow", "First Run", "run-1", "Waiting Tasks", "Review doc", `data-run-id="run-1"`) {
 		t.Fatalf("rendered output missing expected content: %q", got)
 	}
 }
