@@ -1,9 +1,6 @@
 {{define "components/workflow/column"}}
 <section class="column">
-  <div class="column-header">
-    <h2>Workflows</h2>
-    {{template "components/ui/add_button" .CreateButton}}
-  </div>
+  {{template "components/ui/column_header" .Header}}
 
   {{if .Workflows}}
     <ul class="item-list">

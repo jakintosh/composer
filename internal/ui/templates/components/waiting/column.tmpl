@@ -1,6 +1,6 @@
 {{define "components/waiting/column"}}
 <section class="column waiting-column">
-  <h2>Waiting Tasks</h2>
+  {{template "components/ui/column_header" .Header}}
   {{if .Groups}}
     <ul class="item-list waiting-list">
       {{range .Groups}}

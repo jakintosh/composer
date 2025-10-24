@@ -12,13 +12,13 @@ type dashboardViewModel struct {
 	Sidebar        sidebarViewModel
 	WorkflowColumn workflowColumnViewModel
 	WorkflowModal  workflowModalViewModel
-	Runs           []runViewModel
-	WaitingTasks   waitingTaskColumnViewModel
+	RunColumn      runColumnViewModel
+	TaskColumn     waitingTaskColumnViewModel
 }
 
 type workflowColumnViewModel struct {
-	Workflows    []workflowViewModel
-	CreateButton uiButtonViewModel
+	Header    columnHeaderViewModel
+	Workflows []workflowViewModel
 }
 
 type workflowModalViewModel struct {
@@ -33,6 +33,11 @@ type uiButtonViewModel struct {
 	Label     string
 	Type      string
 	IconSize  int
+}
+
+type columnHeaderViewModel struct {
+	Title   string
+	Actions []uiButtonViewModel
 }
 
 type workflowViewModel struct {
@@ -52,6 +57,11 @@ type runViewModel struct {
 	Steps        []runStepViewModel
 }
 
+type runColumnViewModel struct {
+	Header columnHeaderViewModel
+	Runs   []runViewModel
+}
+
 type runStepViewModel struct {
 	Name        string
 	Status      string
@@ -64,6 +74,7 @@ type runStatus struct {
 }
 
 type waitingTaskColumnViewModel struct {
+	Header columnHeaderViewModel
 	Groups []waitingTaskGroupViewModel
 }
 
@@ -134,7 +145,7 @@ func buildDashboardViewModel(
 	}
 	sort.Slice(runVMs, func(i, j int) bool { return runVMs[i].Name < runVMs[j].Name })
 
-	taskGroups := make([]waitingTaskGroupViewModel, 0, len(waitingTasks))
+	taskGroupVMs := make([]waitingTaskGroupViewModel, 0, len(waitingTasks))
 	for _, run := range runs {
 		tasks := waitingTasks[run.RunName]
 		if len(tasks) == 0 {
@@ -152,14 +163,14 @@ func buildDashboardViewModel(
 
 		sort.Slice(taskVMs, func(i, j int) bool { return taskVMs[i].Name < taskVMs[j].Name })
 
-		taskGroups = append(taskGroups, waitingTaskGroupViewModel{
+		taskGroupVMs = append(taskGroupVMs, waitingTaskGroupViewModel{
 			RunName:      strings.TrimSpace(run.RunName),
 			WorkflowName: strings.TrimSpace(run.WorkflowName),
 			TaskCount:    len(taskVMs),
 			Tasks:        taskVMs,
 		})
 	}
-	sort.Slice(taskGroups, func(i, j int) bool { return taskGroups[i].RunName < taskGroups[j].RunName })
+	sort.Slice(taskGroupVMs, func(i, j int) bool { return taskGroupVMs[i].RunName < taskGroupVMs[j].RunName })
 
 	return dashboardViewModel{
 		Sidebar: sidebarViewModel{
@@ -173,15 +184,20 @@ func buildDashboardViewModel(
 			},
 		},
 		WorkflowColumn: workflowColumnViewModel{
-			Workflows: workflowVMs,
-			CreateButton: uiButtonViewModel{
-				ID:        "open-workflow-modal",
-				Class:     "primary-action",
-				Title:     "Create workflow",
-				AriaLabel: "Create workflow",
-				Type:      "button",
-				IconSize:  16,
+			Header: columnHeaderViewModel{
+				Title: "Workflows",
+				Actions: []uiButtonViewModel{
+					{
+						ID:        "open-workflow-modal",
+						Class:     "primary-action",
+						Title:     "Create workflow",
+						AriaLabel: "Create workflow",
+						Type:      "button",
+						IconSize:  16,
+					},
+				},
 			},
+			Workflows: workflowVMs,
 		},
 		WorkflowModal: workflowModalViewModel{
 			AddStepButton: uiButtonViewModel{
@@ -192,9 +208,13 @@ func buildDashboardViewModel(
 				IconSize: 16,
 			},
 		},
-		Runs: runVMs,
-		WaitingTasks: waitingTaskColumnViewModel{
-			Groups: taskGroups,
+		RunColumn: runColumnViewModel{
+			Header: columnHeaderViewModel{Title: "Runs"},
+			Runs:   runVMs,
+		},
+		TaskColumn: waitingTaskColumnViewModel{
+			Header: columnHeaderViewModel{Title: "Tasks"},
+			Groups: taskGroupVMs,
 		},
 	}
 }

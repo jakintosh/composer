@@ -8,8 +8,8 @@
   <h1>Workflow Dashboard</h1>
   <div class="columns">
     {{template "components/workflow/column" .WorkflowColumn}}
-    {{template "components/run/column" .Runs}}
-    {{template "components/waiting/column" .WaitingTasks}}
+    {{template "components/run/column" .RunColumn}}
+    {{template "components/waiting/column" .TaskColumn}}
   </div>
   {{template "components/run/modal" .}}
   {{template "components/workflow/modal" .WorkflowModal}}

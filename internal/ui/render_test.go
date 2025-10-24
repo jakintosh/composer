@@ -24,6 +24,19 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 			},
 		},
 		WorkflowColumn: workflowColumnViewModel{
+			Header: columnHeaderViewModel{
+				Title: "Workflows",
+				Actions: []uiButtonViewModel{
+					{
+						ID:        "open-workflow-modal",
+						Class:     "primary-action",
+						Title:     "Create workflow",
+						AriaLabel: "Create workflow",
+						Type:      "button",
+						IconSize:  16,
+					},
+				},
+			},
 			Workflows: []workflowViewModel{
 				{
 					DisplayName: "Example Workflow",
@@ -33,14 +46,6 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 					Message:     "Example message",
 					StepNames:   []string{"Step A", "Step B"},
 				},
-			},
-			CreateButton: uiButtonViewModel{
-				ID:        "open-workflow-modal",
-				Class:     "primary-action",
-				Title:     "Create workflow",
-				AriaLabel: "Create workflow",
-				Type:      "button",
-				IconSize:  16,
 			},
 		},
 		WorkflowModal: workflowModalViewModel{
@@ -52,19 +57,23 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 				IconSize: 16,
 			},
 		},
-		Runs: []runViewModel{
-			{
-				Name:         "run-1",
-				StateLabel:   "ready",
-				StateClass:   "state-ready",
-				WorkflowName: "Example Workflow",
-				Steps: []runStepViewModel{
-					{Name: "Step A", Status: "pending", StatusClass: "state-pending"},
-					{Name: "Step B", Status: "ready", StatusClass: "state-ready"},
+		RunColumn: runColumnViewModel{
+			Header: columnHeaderViewModel{Title: "Runs"},
+			Runs: []runViewModel{
+				{
+					Name:         "run-1",
+					StateLabel:   "ready",
+					StateClass:   "state-ready",
+					WorkflowName: "Example Workflow",
+					Steps: []runStepViewModel{
+						{Name: "Step A", Status: "pending", StatusClass: "state-pending"},
+						{Name: "Step B", Status: "ready", StatusClass: "state-ready"},
+					},
 				},
 			},
 		},
-		WaitingTasks: waitingTaskColumnViewModel{
+		TaskColumn: waitingTaskColumnViewModel{
+			Header: columnHeaderViewModel{Title: "Waiting Tasks"},
 			Groups: []waitingTaskGroupViewModel{
 				{
 					RunName:      "run-1",

@@ -109,6 +109,13 @@ h2 {
   margin-bottom: 0.75rem;
 }
 
+.column-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+
 .primary-action {
   background: #2ecc71;
   border: none;

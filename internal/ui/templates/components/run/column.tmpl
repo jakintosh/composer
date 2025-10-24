@@ -1,9 +1,9 @@
 {{define "components/run/column"}}
 <section class="column">
-  <h2>Runs</h2>
-  {{if .}}
+  {{template "components/ui/column_header" .Header}}
+  {{if .Runs}}
     <ul class="item-list">
-      {{range .}}
+      {{range .Runs}}
         <li class="list-item">
           <details>
             <summary>
