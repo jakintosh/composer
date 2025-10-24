@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"composer/internal/orchestrator"
 	"composer/internal/workflow"
 )
 
@@ -11,6 +12,7 @@ type dashboardViewModel struct {
 	WorkflowColumn workflowColumnViewModel
 	WorkflowModal  workflowModalViewModel
 	Runs           []runViewModel
+	WaitingTasks   waitingTaskColumnViewModel
 }
 
 type workflowColumnViewModel struct {
@@ -60,7 +62,28 @@ type runStatus struct {
 	Class string
 }
 
-func buildDashboardViewModel(workflows []workflow.Workflow, runs []workflow.RunState) dashboardViewModel {
+type waitingTaskColumnViewModel struct {
+	Groups []waitingTaskGroupViewModel
+}
+
+type waitingTaskGroupViewModel struct {
+	RunName      string
+	WorkflowName string
+	TaskCount    int
+	Tasks        []waitingTaskViewModel
+}
+
+type waitingTaskViewModel struct {
+	Name        string
+	Description string
+	Prompt      string
+}
+
+func buildDashboardViewModel(
+	workflows []workflow.Workflow,
+	runs []workflow.RunState,
+	waitingTasks map[string][]orchestrator.WaitingTask,
+) dashboardViewModel {
 	workflowVMs := make([]workflowViewModel, 0, len(workflows))
 	for _, wf := range workflows {
 		workflowVMs = append(workflowVMs, workflowViewModel{
@@ -99,6 +122,33 @@ func buildDashboardViewModel(workflows []workflow.Workflow, runs []workflow.RunS
 	}
 	sort.Slice(runVMs, func(i, j int) bool { return runVMs[i].Name < runVMs[j].Name })
 
+	taskGroups := make([]waitingTaskGroupViewModel, 0, len(waitingTasks))
+	for _, run := range runs {
+		tasks := waitingTasks[run.RunName]
+		if len(tasks) == 0 {
+			continue
+		}
+
+		taskVMs := make([]waitingTaskViewModel, 0, len(tasks))
+		for _, task := range tasks {
+			taskVMs = append(taskVMs, waitingTaskViewModel{
+				Name:        strings.TrimSpace(task.Name),
+				Description: strings.TrimSpace(task.Description),
+				Prompt:      strings.TrimSpace(task.Prompt),
+			})
+		}
+
+		sort.Slice(taskVMs, func(i, j int) bool { return taskVMs[i].Name < taskVMs[j].Name })
+
+		taskGroups = append(taskGroups, waitingTaskGroupViewModel{
+			RunName:      strings.TrimSpace(run.RunName),
+			WorkflowName: strings.TrimSpace(run.WorkflowName),
+			TaskCount:    len(taskVMs),
+			Tasks:        taskVMs,
+		})
+	}
+	sort.Slice(taskGroups, func(i, j int) bool { return taskGroups[i].RunName < taskGroups[j].RunName })
+
 	return dashboardViewModel{
 		WorkflowColumn: workflowColumnViewModel{
 			Workflows: workflowVMs,
@@ -121,6 +171,9 @@ func buildDashboardViewModel(workflows []workflow.Workflow, runs []workflow.RunS
 			},
 		},
 		Runs: runVMs,
+		WaitingTasks: waitingTaskColumnViewModel{
+			Groups: taskGroups,
+		},
 	}
 }
 

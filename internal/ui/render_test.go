@@ -58,6 +58,22 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 				},
 			},
 		},
+		WaitingTasks: waitingTaskColumnViewModel{
+			Groups: []waitingTaskGroupViewModel{
+				{
+					RunName:      "run-1",
+					WorkflowName: "Example Workflow",
+					TaskCount:    1,
+					Tasks: []waitingTaskViewModel{
+						{
+							Name:        "Review doc",
+							Description: "Look over the generated document",
+							Prompt:      "Confirm the document reads well.",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	var buf bytes.Buffer
@@ -65,7 +81,7 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 		t.Fatalf("renderer.Page() error = %v", err)
 	}
 
-	if got := buf.String(); !containsAll(got, "Workflow Dashboard", "Example Workflow", "run-1") {
+	if got := buf.String(); !containsAll(got, "Workflow Dashboard", "Example Workflow", "run-1", "Waiting Tasks", "Review doc") {
 		t.Fatalf("rendered output missing expected content: %q", got)
 	}
 }

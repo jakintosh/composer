@@ -304,6 +304,70 @@ func TestGetRunTasks_RunNotFound(t *testing.T) {
 	}
 }
 
+// TestGetRunsTasks_GroupedByRun tests aggregating waiting tasks across runs
+func TestGetRunsTasks_GroupedByRun(t *testing.T) {
+	cleanup := setupTestEnv(t)
+	defer cleanup()
+
+	createWorkflowFixture(t, "test-workflow", "Test Workflow")
+	createRunFixture(t, "run-ready", "test-workflow")
+	createRunFixture(t, "run-empty", "test-workflow")
+
+	// Mark the first run's step as ready
+	state, err := workflow.LoadState("run-ready")
+	if err != nil {
+		t.Fatalf("Failed to load run state: %v", err)
+	}
+	state.StepStates["step1"] = workflow.StepState{Status: workflow.StatusReady}
+	if err := state.Save(); err != nil {
+		t.Fatalf("Failed to save updated run state: %v", err)
+	}
+
+	router := setupRouter()
+
+	// get aggregated tasks
+	var response struct {
+		Error *apiError                             `json:"error"`
+		Data  map[string][]orchestrator.WaitingTask `json:"data"`
+	}
+	result := get(router, "/api/runs/tasks", &response)
+
+	// verify result
+	if err := expectStatus(http.StatusOK, result); err != nil {
+		t.Fatalf("%v\n%v", err, response)
+	}
+
+	if response.Error != nil {
+		t.Fatalf("Expected no API error, got %+v", response.Error)
+	}
+
+	if len(response.Data) != 2 {
+		t.Fatalf("Expected data for 2 runs, got %d", len(response.Data))
+	}
+
+	tasksReady, ok := response.Data["run-ready"]
+	if !ok {
+		t.Fatalf("Expected tasks for run-ready")
+	}
+	if len(tasksReady) != 1 {
+		t.Fatalf("Expected 1 waiting task for run-ready, got %d", len(tasksReady))
+	}
+	if tasksReady[0].Name != "step1" {
+		t.Errorf("Expected task name 'step1', got '%s'", tasksReady[0].Name)
+	}
+	if tasksReady[0].Description != "First step" {
+		t.Errorf("Expected description 'First step', got '%s'", tasksReady[0].Description)
+	}
+
+	tasksEmpty, ok := response.Data["run-empty"]
+	if !ok {
+		t.Fatalf("Expected entry for run-empty")
+	}
+	if len(tasksEmpty) != 0 {
+		t.Fatalf("Expected no waiting tasks for run-empty, got %d", len(tasksEmpty))
+	}
+}
+
 // TestGetRunTasks_WorkflowNotFound tests getting tasks when workflow is missing
 func TestGetRunTasks_WorkflowNotFound(t *testing.T) {
 	cleanup := setupTestEnv(t)

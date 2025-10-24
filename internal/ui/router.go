@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"composer/internal/orchestrator"
 	"composer/internal/workflow"
 )
 
@@ -39,7 +40,13 @@ func handleDashboard(renderer *Renderer) http.HandlerFunc {
 			return
 		}
 
-		data := buildDashboardViewModel(workflows, runs)
+		waitingTasks, err := orchestrator.ListWaitingTasksByRun(runs)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to load waiting tasks: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		data := buildDashboardViewModel(workflows, runs, waitingTasks)
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := renderer.Page(w, "pages/dashboard", data); err != nil {

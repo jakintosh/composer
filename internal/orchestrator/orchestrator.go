@@ -202,6 +202,36 @@ func ListWaitingTasks(wf *workflow.Workflow, runName string) ([]WaitingTask, err
 	return tasks, nil
 }
 
+// ListWaitingTasksByRun returns waiting tasks grouped by run name.
+func ListWaitingTasksByRun(runs []workflow.RunState) (map[string][]WaitingTask, error) {
+	tasksByRun := make(map[string][]WaitingTask, len(runs))
+	workflowCache := make(map[string]*workflow.Workflow)
+
+	for _, run := range runs {
+		if run.RunName == "" || run.WorkflowName == "" {
+			continue
+		}
+
+		wf, ok := workflowCache[run.WorkflowName]
+		if !ok {
+			var err error
+			wf, _, err = workflow.LoadWorkflow(run.WorkflowName)
+			if err != nil {
+				return nil, fmt.Errorf("load workflow '%s' for run '%s': %w", run.WorkflowName, run.RunName, err)
+			}
+			workflowCache[run.WorkflowName] = wf
+		}
+
+		tasks, err := ListWaitingTasks(wf, run.RunName)
+		if err != nil {
+			return nil, fmt.Errorf("list waiting tasks for run '%s': %w", run.RunName, err)
+		}
+		tasksByRun[run.RunName] = tasks
+	}
+
+	return tasksByRun, nil
+}
+
 // CompleteTask marks a ready task as complete and adds its output
 func CompleteTask(wf *workflow.Workflow, runName string, taskIndex int) error {
 	// Load current state

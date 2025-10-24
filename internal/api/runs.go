@@ -12,6 +12,7 @@ import (
 // buildRunsRouter registers run-related routes
 func buildRunsRouter(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/runs", handleGetRuns)
+	mux.HandleFunc("GET /api/runs/tasks", handleGetRunsTasks)
 	mux.HandleFunc("GET /api/run/{name}", handleGetRun)
 	mux.HandleFunc("POST /api/run/{name}", handlePostRun)
 	mux.HandleFunc("GET /api/run/{name}/tasks", handleGetRunTasks)
@@ -105,4 +106,21 @@ func handleGetRunTasks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeData(w, http.StatusOK, tasks)
+}
+
+// handleGetRunsTasks returns waiting tasks grouped by run name
+func handleGetRunsTasks(w http.ResponseWriter, r *http.Request) {
+	runs, err := workflow.ListRuns()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to list runs: %v", err))
+		return
+	}
+
+	result, err := orchestrator.ListWaitingTasksByRun(runs)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to list waiting tasks: %v", err))
+		return
+	}
+
+	writeData(w, http.StatusOK, result)
 }
