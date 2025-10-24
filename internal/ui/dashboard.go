@@ -9,6 +9,7 @@ import (
 )
 
 type dashboardViewModel struct {
+	Sidebar        sidebarViewModel
 	WorkflowColumn workflowColumnViewModel
 	WorkflowModal  workflowModalViewModel
 	Runs           []runViewModel
@@ -77,6 +78,17 @@ type waitingTaskViewModel struct {
 	Name        string
 	Description string
 	Prompt      string
+}
+
+type sidebarViewModel struct {
+	Title string
+	Links []sidebarLinkViewModel
+}
+
+type sidebarLinkViewModel struct {
+	Label  string
+	Href   string
+	Active bool
 }
 
 func buildDashboardViewModel(
@@ -150,6 +162,16 @@ func buildDashboardViewModel(
 	sort.Slice(taskGroups, func(i, j int) bool { return taskGroups[i].RunName < taskGroups[j].RunName })
 
 	return dashboardViewModel{
+		Sidebar: sidebarViewModel{
+			Title: "Composer",
+			Links: []sidebarLinkViewModel{
+				{
+					Label:  "Dashboard",
+					Href:   "/",
+					Active: true,
+				},
+			},
+		},
 		WorkflowColumn: workflowColumnViewModel{
 			Workflows: workflowVMs,
 			CreateButton: uiButtonViewModel{

@@ -17,6 +17,12 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 	}
 
 	vm := dashboardViewModel{
+		Sidebar: sidebarViewModel{
+			Title: "Composer",
+			Links: []sidebarLinkViewModel{
+				{Label: "Dashboard", Href: "/", Active: true},
+			},
+		},
 		WorkflowColumn: workflowColumnViewModel{
 			Workflows: []workflowViewModel{
 				{

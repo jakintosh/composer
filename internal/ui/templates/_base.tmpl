@@ -9,9 +9,16 @@
   {{block "head" .}}{{end}}
 </head>
 <body>
-  <main class="container">
-    {{block "content" .}}{{end}}
-  </main>
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      {{template "components/navigation/sidebar" .Sidebar}}
+    </aside>
+    <main class="app-main">
+      <div class="app-content">
+        {{block "content" .}}{{end}}
+      </div>
+    </main>
+  </div>
   {{block "scripts" .}}{{end}}
 </body>
 </html>

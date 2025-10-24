@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	addr := "localhost:8080"
+	addr := "0.0.0.0:8080"
 
 	apiMux := api.BuildRouter()
 	uiMux, err := ui.BuildRouter()

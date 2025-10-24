@@ -1,0 +1,19 @@
+{{define "components/navigation/sidebar"}}
+  <div class="sidebar-inner">
+    {{with .Title}}
+      <div class="sidebar-brand">{{.}}</div>
+    {{end}}
+    <nav class="sidebar-nav">
+      <ul>
+        {{range .Links}}
+          <li>
+            <a
+              class="sidebar-link{{if .Active}} is-active{{end}}"
+              href="{{.Href}}"
+            >{{.Label}}</a>
+          </li>
+        {{end}}
+      </ul>
+    </nav>
+  </div>
+{{end}}
