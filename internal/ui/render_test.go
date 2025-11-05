@@ -7,10 +7,11 @@ import (
 )
 
 func TestRendererLoadsDashboardTemplate(t *testing.T) {
-	renderer, err := NewRenderer(nil)
+	server, err := Init(ModeProduction)
 	if err != nil {
-		t.Fatalf("NewRenderer() error = %v", err)
+		t.Fatalf("Init() error = %v", err)
 	}
+	renderer := server.Renderer()
 
 	if renderer.templates.Lookup("layouts/base") == nil {
 		t.Fatalf("expected layouts/base template to be parsed")
@@ -109,4 +110,15 @@ func containsAll(haystack string, needles ...string) bool {
 		}
 	}
 	return true
+}
+
+func TestInitDevelopmentModeCreatesReloadingRenderer(t *testing.T) {
+	server, err := Init(ModeDevelopment)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	renderer := server.Renderer()
+	if !renderer.dev {
+		t.Fatalf("expected renderer.dev to be true in development mode")
+	}
 }

@@ -8,6 +8,8 @@ import (
 	"io/fs"
 	"maps"
 	"os"
+	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -19,27 +21,106 @@ var templateFS embed.FS
 //go:embed static/*
 var staticFS embed.FS
 
-type Renderer struct {
-	mu        sync.RWMutex
-	templates *template.Template
-	funcs     template.FuncMap
-	dev       bool
+type Mode string
+
+const (
+	ModeProduction  Mode = "production"
+	ModeDevelopment Mode = "development"
+)
+
+type Server struct {
+	renderer *Renderer
+	static   fs.FS
 }
 
-func NewRenderer(funcs template.FuncMap) (*Renderer, error) {
+// Renderer returns the template renderer backing this UI server.
+func (s *Server) Renderer() *Renderer {
+	return s.renderer
+}
+
+func newServer(mode Mode, funcs template.FuncMap) (*Server, error) {
+	provider, err := newProvider(mode)
+	if err != nil {
+		return nil, err
+	}
+
+	renderer, err := newRenderer(provider.templateFS, funcs, provider.dev)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Server{
+		renderer: renderer,
+		static:   provider.staticFS,
+	}, nil
+}
+
+// Init configures the UI server for the supplied mode.
+func Init(mode Mode) (*Server, error) {
+	return newServer(mode, nil)
+}
+
+type provider struct {
+	templateFS fs.FS
+	staticFS   fs.FS
+	dev        bool
+}
+
+func newProvider(mode Mode) (*provider, error) {
+	switch mode {
+	case ModeProduction:
+		static, err := fs.Sub(staticFS, "static")
+		if err != nil {
+			return nil, fmt.Errorf("ui: load embedded static assets: %w", err)
+		}
+		return &provider{
+			templateFS: templateFS,
+			staticFS:   static,
+			dev:        false,
+		}, nil
+	case ModeDevelopment:
+		root := uiSourceRoot()
+		templateDir := filepath.Join(root, "templates")
+		if _, err := os.Stat(templateDir); err != nil {
+			return nil, fmt.Errorf("ui: templates directory not found at %q: %w", templateDir, err)
+		}
+		staticDir := filepath.Join(root, "static")
+		if _, err := os.Stat(staticDir); err != nil {
+			return nil, fmt.Errorf("ui: static directory not found at %q: %w", staticDir, err)
+		}
+		return &provider{
+			templateFS: os.DirFS(root),
+			staticFS:   os.DirFS(staticDir),
+			dev:        true,
+		}, nil
+	default:
+		return nil, fmt.Errorf("ui: unsupported mode %q", mode)
+	}
+}
+
+type Renderer struct {
+	mu         sync.RWMutex
+	templates  *template.Template
+	funcs      template.FuncMap
+	templateFS fs.FS
+	dev        bool
+}
+
+func newRenderer(templateSource fs.FS, funcs template.FuncMap, dev bool) (*Renderer, error) {
 	if funcs == nil {
 		funcs = template.FuncMap{}
 	}
 
-	parsed, err := parseTemplates(templateFS, funcs)
+	parsed, err := parseTemplates(templateSource, funcs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Renderer{
-		templates: parsed,
-		funcs:     copyFuncMap(funcs),
-		dev:       devMode(),
+		templates:  parsed,
+		funcs:      copyFuncMap(funcs),
+		templateFS: templateSource,
+		dev:        dev,
 	}, nil
 }
 
@@ -53,7 +134,7 @@ func (r *Renderer) Page(w io.Writer, name string, data any) error {
 
 func (r *Renderer) currentTemplates() (*template.Template, error) {
 	if r.dev {
-		parsed, err := parseTemplates(os.DirFS("internal/ui"), r.funcs)
+		parsed, err := parseTemplates(r.templateFS, r.funcs)
 		if err != nil {
 			return nil, err
 		}
@@ -104,13 +185,10 @@ func copyFuncMap(in template.FuncMap) template.FuncMap {
 	return out
 }
 
-func devMode() bool {
-	return os.Getenv("DEV") == "1"
-}
-
-func staticFileSystem() (fs.FS, error) {
-	if devMode() {
-		return os.DirFS("internal/ui/static"), nil
+func uiSourceRoot() string {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		return "internal/ui"
 	}
-	return fs.Sub(staticFS, "static")
+	return filepath.Dir(filename)
 }

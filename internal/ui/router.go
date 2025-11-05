@@ -9,21 +9,11 @@ import (
 )
 
 // BuildRouter creates and configures the UI router.
-func BuildRouter() (*http.ServeMux, error) {
-	renderer, err := NewRenderer(nil)
-	if err != nil {
-		return nil, fmt.Errorf("prepare renderer: %w", err)
-	}
-
-	staticFS, err := staticFileSystem()
-	if err != nil {
-		return nil, fmt.Errorf("load static assets: %w", err)
-	}
-
+func (s *Server) BuildRouter() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.Handle("GET /", handleDashboard(renderer))
-	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
-	return mux, nil
+	mux.Handle("GET /", handleDashboard(s.renderer))
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(s.static))))
+	return mux
 }
 
 func handleDashboard(renderer *Renderer) http.HandlerFunc {
