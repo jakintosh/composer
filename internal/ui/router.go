@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"composer/internal/orchestrator"
+	"composer/internal/ui/view"
 	"composer/internal/workflow"
 )
 
@@ -36,10 +37,10 @@ func handleDashboard(renderer *Renderer) http.HandlerFunc {
 			return
 		}
 
-		data := buildDashboardViewModel(workflows, runs, tasks)
+		data := buildDashboardModel(workflows, runs, tasks)
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		if err := renderer.Page(w, "pages/dashboard", data); err != nil {
+		if err := renderer.Page(w, view.DashboardTemplate, data); err != nil {
 			http.Error(w, fmt.Sprintf("failed to render dashboard: %v", err), http.StatusInternalServerError)
 		}
 	}

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"composer/internal/ui/view"
 )
 
 func TestRendererLoadsDashboardTemplate(t *testing.T) {
@@ -17,17 +19,17 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 		t.Fatalf("expected layouts/base template to be parsed")
 	}
 
-	vm := dashboardViewModel{
-		Sidebar: sidebarViewModel{
+	vm := view.Dashboard{
+		Sidebar: view.Sidebar{
 			Title: "Composer",
-			Links: []sidebarLinkViewModel{
+			Links: []view.SidebarLink{
 				{Label: "Dashboard", Href: "/", Active: true},
 			},
 		},
-		WorkflowColumn: workflowColumnViewModel{
-			Header: columnHeaderViewModel{
+		WorkflowColumn: view.WorkflowColumn{
+			Header: view.ColumnHeader{
 				Title: "Workflows",
-				Actions: []uiButtonViewModel{
+				Actions: []view.Button{
 					{
 						ID:        "open-workflow-modal",
 						Class:     "button--accent button--icon",
@@ -38,7 +40,7 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 					},
 				},
 			},
-			Workflows: []workflowViewModel{
+			Workflows: []view.Workflow{
 				{
 					DisplayName: "Example Workflow",
 					ID:          "wf-123",
@@ -48,8 +50,8 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 				},
 			},
 		},
-		WorkflowModal: workflowModalViewModel{
-			AddStepButton: uiButtonViewModel{
+		WorkflowModal: view.WorkflowModal{
+			AddStepButton: view.Button{
 				ID:       "add-workflow-step",
 				Class:    "button--outline button--sm",
 				Label:    "Add Step",
@@ -57,31 +59,31 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 				IconSize: 16,
 			},
 		},
-		RunColumn: runColumnViewModel{
-			Header: columnHeaderViewModel{Title: "Runs"},
-			Runs: []runViewModel{
+		RunColumn: view.RunColumn{
+			Header: view.ColumnHeader{Title: "Runs"},
+			Runs: []view.Run{
 				{
 					DisplayName:  "First Run",
 					ID:           "run-1",
 					StateLabel:   "ready",
 					StateClass:   "status-badge--ready",
 					WorkflowName: "Example Workflow",
-					Steps: []runStepViewModel{
+					Steps: []view.RunStep{
 						{Name: "Step A", Status: "pending", StatusClass: "status-badge--pending"},
 						{Name: "Step B", Status: "ready", StatusClass: "status-badge--ready"},
 					},
 				},
 			},
 		},
-		TaskColumn: waitingTaskColumnViewModel{
-			Header: columnHeaderViewModel{Title: "Waiting Tasks"},
-			Groups: []waitingTaskGroupViewModel{
+		TaskColumn: view.WaitingColumn{
+			Header: view.ColumnHeader{Title: "Waiting Tasks"},
+			Groups: []view.WaitingGroup{
 				{
 					RunID:          "run-1",
 					RunDisplayName: "First Run",
 					WorkflowName:   "Example Workflow",
 					TaskCount:      1,
-					Tasks: []waitingTaskViewModel{
+					Tasks: []view.WaitingTask{
 						{
 							Name:        "Review doc",
 							Description: "Look over the generated document",
@@ -94,7 +96,7 @@ func TestRendererLoadsDashboardTemplate(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if err := renderer.Page(&buf, "pages/dashboard", vm); err != nil {
+	if err := renderer.Page(&buf, view.DashboardTemplate, vm); err != nil {
 		t.Fatalf("renderer.Page() error = %v", err)
 	}
 

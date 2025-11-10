@@ -5,112 +5,18 @@ import (
 	"strings"
 
 	"composer/internal/orchestrator"
+	"composer/internal/ui/view"
 	"composer/internal/workflow"
 )
 
-type dashboardViewModel struct {
-	Sidebar        sidebarViewModel
-	WorkflowColumn workflowColumnViewModel
-	WorkflowModal  workflowModalViewModel
-	RunColumn      runColumnViewModel
-	TaskColumn     waitingTaskColumnViewModel
-}
-
-type workflowColumnViewModel struct {
-	Header    columnHeaderViewModel
-	Workflows []workflowViewModel
-}
-
-type workflowModalViewModel struct {
-	AddStepButton uiButtonViewModel
-}
-
-type uiButtonViewModel struct {
-	ID        string
-	Class     string
-	Title     string
-	AriaLabel string
-	Label     string
-	Type      string
-	IconSize  int
-}
-
-type columnHeaderViewModel struct {
-	Title   string
-	Actions []uiButtonViewModel
-}
-
-type workflowViewModel struct {
-	DisplayName string
-	ID          string
-	Description string
-	Message     string
-	StepNames   []string
-}
-
-type runViewModel struct {
-	DisplayName  string
-	ID           string
-	StateLabel   string
-	StateClass   string
-	WorkflowName string
-	Steps        []runStepViewModel
-}
-
-type runColumnViewModel struct {
-	Header columnHeaderViewModel
-	Runs   []runViewModel
-}
-
-type runStepViewModel struct {
-	Name        string
-	Status      string
-	StatusClass string
-}
-
-type runStatus struct {
-	Label string
-	Class string
-}
-
-type waitingTaskColumnViewModel struct {
-	Header columnHeaderViewModel
-	Groups []waitingTaskGroupViewModel
-}
-
-type waitingTaskGroupViewModel struct {
-	RunID          string
-	RunDisplayName string
-	WorkflowName   string
-	TaskCount      int
-	Tasks          []waitingTaskViewModel
-}
-
-type waitingTaskViewModel struct {
-	Name        string
-	Description string
-	Prompt      string
-}
-
-type sidebarViewModel struct {
-	Title string
-	Links []sidebarLinkViewModel
-}
-
-type sidebarLinkViewModel struct {
-	Label  string
-	Href   string
-	Active bool
-}
-
-func buildDashboardViewModel(
+func buildDashboardModel(
 	workflows []workflow.Workflow,
 	runs []workflow.RunState,
 	waitingTasks map[string][]orchestrator.WaitingTask,
-) dashboardViewModel {
-	workflowVMs := make([]workflowViewModel, 0, len(workflows))
+) view.Dashboard {
+	workflowVMs := make([]view.Workflow, 0, len(workflows))
 	for _, wf := range workflows {
-		workflowVMs = append(workflowVMs, workflowViewModel{
+		workflowVMs = append(workflowVMs, view.Workflow{
 			DisplayName: strings.TrimSpace(wf.DisplayName),
 			ID:          strings.TrimSpace(wf.ID),
 			Description: strings.TrimSpace(wf.Description),
@@ -122,30 +28,30 @@ func buildDashboardViewModel(
 		return workflowVMs[i].DisplayName < workflowVMs[j].DisplayName
 	})
 
-	runVMs := make([]runViewModel, 0, len(runs))
-	for _, run := range runs {
-		status := summarizeRunState(run)
-		stepNames := sortedStepNames(run.StepStates)
+	runVMs := make([]view.Run, 0, len(runs))
+	for _, runState := range runs {
+		status := summarizeRunState(runState)
+		stepNames := sortedStepNames(runState.StepStates)
 
-		displayName := strings.TrimSpace(run.Name)
-		runID := strings.TrimSpace(run.ID)
+		displayName := strings.TrimSpace(runState.Name)
+		runID := strings.TrimSpace(runState.ID)
 
-		steps := make([]runStepViewModel, 0, len(stepNames))
+		steps := make([]view.RunStep, 0, len(stepNames))
 		for _, name := range stepNames {
-			stepState := run.StepStates[name]
-			steps = append(steps, runStepViewModel{
+			stepState := runState.StepStates[name]
+			steps = append(steps, view.RunStep{
 				Name:        name,
 				Status:      string(stepState.Status),
 				StatusClass: stateClassForStatus(stepState.Status),
 			})
 		}
 
-		runVMs = append(runVMs, runViewModel{
+		runVMs = append(runVMs, view.Run{
 			DisplayName:  displayName,
 			ID:           runID,
 			StateLabel:   status.Label,
 			StateClass:   status.Class,
-			WorkflowName: strings.TrimSpace(run.WorkflowName),
+			WorkflowName: strings.TrimSpace(runState.WorkflowName),
 			Steps:        steps,
 		})
 	}
@@ -153,10 +59,10 @@ func buildDashboardViewModel(
 		return runVMs[i].DisplayName < runVMs[j].DisplayName
 	})
 
-	taskGroupVMs := make([]waitingTaskGroupViewModel, 0, len(waitingTasks))
-	for _, run := range runs {
-		runID := strings.TrimSpace(run.ID)
-		displayName := strings.TrimSpace(run.Name)
+	taskGroupVMs := make([]view.WaitingGroup, 0, len(waitingTasks))
+	for _, runState := range runs {
+		runID := strings.TrimSpace(runState.ID)
+		displayName := strings.TrimSpace(runState.Name)
 		if displayName == "" {
 			displayName = runID
 		}
@@ -166,9 +72,9 @@ func buildDashboardViewModel(
 			continue
 		}
 
-		taskVMs := make([]waitingTaskViewModel, 0, len(tasks))
+		taskVMs := make([]view.WaitingTask, 0, len(tasks))
 		for _, task := range tasks {
-			taskVMs = append(taskVMs, waitingTaskViewModel{
+			taskVMs = append(taskVMs, view.WaitingTask{
 				Name:        strings.TrimSpace(task.Name),
 				Description: strings.TrimSpace(task.Description),
 				Prompt:      strings.TrimSpace(task.Prompt),
@@ -179,10 +85,10 @@ func buildDashboardViewModel(
 			return taskVMs[i].Name < taskVMs[j].Name
 		})
 
-		taskGroupVMs = append(taskGroupVMs, waitingTaskGroupViewModel{
+		taskGroupVMs = append(taskGroupVMs, view.WaitingGroup{
 			RunID:          runID,
 			RunDisplayName: displayName,
-			WorkflowName:   strings.TrimSpace(run.WorkflowName),
+			WorkflowName:   strings.TrimSpace(runState.WorkflowName),
 			TaskCount:      len(taskVMs),
 			Tasks:          taskVMs,
 		})
@@ -191,10 +97,10 @@ func buildDashboardViewModel(
 		return taskGroupVMs[i].RunDisplayName < taskGroupVMs[j].RunDisplayName
 	})
 
-	return dashboardViewModel{
-		Sidebar: sidebarViewModel{
+	return view.Dashboard{
+		Sidebar: view.Sidebar{
 			Title: "Composer",
-			Links: []sidebarLinkViewModel{
+			Links: []view.SidebarLink{
 				{
 					Label:  "Dashboard",
 					Href:   "/",
@@ -202,10 +108,10 @@ func buildDashboardViewModel(
 				},
 			},
 		},
-		WorkflowColumn: workflowColumnViewModel{
-			Header: columnHeaderViewModel{
+		WorkflowColumn: view.WorkflowColumn{
+			Header: view.ColumnHeader{
 				Title: "Workflows",
-				Actions: []uiButtonViewModel{
+				Actions: []view.Button{
 					{
 						ID:        "open-workflow-modal",
 						Class:     "button--accent button--icon",
@@ -218,8 +124,8 @@ func buildDashboardViewModel(
 			},
 			Workflows: workflowVMs,
 		},
-		WorkflowModal: workflowModalViewModel{
-			AddStepButton: uiButtonViewModel{
+		WorkflowModal: view.WorkflowModal{
+			AddStepButton: view.Button{
 				ID:       "add-workflow-step",
 				Class:    "button--outline button--sm",
 				Label:    "Add Step",
@@ -227,12 +133,12 @@ func buildDashboardViewModel(
 				IconSize: 16,
 			},
 		},
-		RunColumn: runColumnViewModel{
-			Header: columnHeaderViewModel{Title: "Runs"},
+		RunColumn: view.RunColumn{
+			Header: view.ColumnHeader{Title: "Runs"},
 			Runs:   runVMs,
 		},
-		TaskColumn: waitingTaskColumnViewModel{
-			Header: columnHeaderViewModel{Title: "Tasks"},
+		TaskColumn: view.WaitingColumn{
+			Header: view.ColumnHeader{Title: "Tasks"},
 			Groups: taskGroupVMs,
 		},
 	}
@@ -270,6 +176,11 @@ func stateClassForStatus(status workflow.StepStatus) string {
 	default:
 		return "status-badge--unknown"
 	}
+}
+
+type runStatus struct {
+	Label string
+	Class string
 }
 
 func summarizeRunState(rs workflow.RunState) runStatus {
