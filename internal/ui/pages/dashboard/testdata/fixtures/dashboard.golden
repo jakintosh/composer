@@ -40,11 +40,14 @@
   </div>
 </header>
 
+  
+    
+  <p>No workflows available.</p>
+
 
   
-    <p>No workflows available.</p>
-  
 </section>
+
 
           <section class="panel">
   <header class="panel__header">
@@ -55,9 +58,13 @@
 </header>
 
   
-    <p>No runs found.</p>
+    
+  <p>No runs found.</p>
+
+
   
 </section>
+
 
           <section class="panel panel--muted">
   <header class="panel__header">
@@ -77,64 +84,76 @@
   <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="run-modal-title">
     <div class="modal__header">
       <h2 id="run-modal-title" class="modal__title">Start Run</h2>
-      <button type="button" class="button button--ghost button--icon modal__close" data-close-modal aria-label="Close start run form">×</button>
+      <button type="button"
+              class="button button--ghost button--icon modal__close"
+              data-close-modal
+              aria-label="Close start run form">
+        ×
+      </button>
     </div>
     <div class="modal__body">
       <div id="run-form-error" class="alert alert--error" role="alert"></div>
-      <form id="run-form">
-        <div class="form__field">
-          <label for="run-workflow-name">Workflow Name</label>
-          <input id="run-workflow-name" name="run-workflow-name" type="text" readonly aria-readonly="true">
-        </div>
-        <div class="form__field">
-          <label for="run-workflow-id">Workflow ID</label>
-          <input id="run-workflow-id" name="run-workflow-id" type="text" readonly aria-readonly="true">
-        </div>
-        <div class="form__field">
-          <label for="run-name">Display Name</label>
-          <input id="run-name" name="run-name" type="text" placeholder="My Example Run" required>
-          <p class="form__hint">Shown in the dashboard. Choose something descriptive.</p>
-          <p class="form__hint">Run ID (used for CLI commands): <code id="run-id-preview">—</code></p>
-        </div>
-        <input id="run-id" name="run-id" type="hidden">
-        <div class="form__actions">
-          <button type="button" class="button button--ghost" data-close-modal>Cancel</button>
-          <button type="submit" id="run-submit" class="button button--accent">Start Run</button>
-        </div>
-      </form>
+<form id="run-form">
+  <div class="form__field">
+    <label for="run-workflow-name">Workflow Name</label>
+    <input id="run-workflow-name" name="run-workflow-name" type="text" readonly aria-readonly="true">
+  </div>
+  <div class="form__field">
+    <label for="run-workflow-id">Workflow ID</label>
+    <input id="run-workflow-id" name="run-workflow-id" type="text" readonly aria-readonly="true">
+  </div>
+  <div class="form__field">
+    <label for="run-name">Display Name</label>
+    <input id="run-name" name="run-name" type="text" placeholder="My Example Run" required>
+    <p class="form__hint">Shown in the dashboard. Choose something descriptive.</p>
+    <p class="form__hint">Run ID (used for CLI commands): <code id="run-id-preview">—</code></p>
+  </div>
+  <input id="run-id" name="run-id" type="hidden">
+  <div class="form__actions">
+    <button type="button" class="button button--ghost" data-close-modal>Cancel</button>
+    <button type="submit" id="run-submit" class="button button--accent">Start Run</button>
+  </div>
+</form>
+
     </div>
   </div>
 </div>
+
 
         <div id="workflow-modal" class="modal" aria-hidden="true">
   <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="workflow-modal-title">
     <div class="modal__header">
       <h2 id="workflow-modal-title" class="modal__title">Create Workflow</h2>
-      <button type="button" class="button button--ghost button--icon modal__close" data-close-modal aria-label="Close create workflow form">×</button>
+      <button type="button"
+              class="button button--ghost button--icon modal__close"
+              data-close-modal
+              aria-label="Close create workflow form">
+        ×
+      </button>
     </div>
     <div class="modal__body">
       <div id="workflow-form-error" class="alert alert--error" role="alert"></div>
-      <form id="workflow-form">
-        <div class="form__field">
-          <label for="workflow-id">Workflow ID</label>
-          <input id="workflow-id" name="workflow-id" type="text" placeholder="my-workflow" required>
-        </div>
-        <div class="form__field">
-          <label for="workflow-title">Title</label>
-          <input id="workflow-title" name="workflow-title" type="text" placeholder="Human-friendly workflow title" required>
-        </div>
-        <div class="form__field">
-          <label for="workflow-description">Description</label>
-          <textarea id="workflow-description" name="workflow-description" placeholder="Explain what this workflow accomplishes"></textarea>
-        </div>
-        <div class="form__field">
-          <label for="workflow-message">Message</label>
-          <textarea id="workflow-message" name="workflow-message" placeholder="Optional run message shown to operators"></textarea>
-        </div>
-        <div class="form__field">
-          <div class="workflow-steps__header">
-            <h3>Steps</h3>
-            <button type="button"
+<form id="workflow-form">
+  <div class="form__field">
+    <label for="workflow-id">Workflow ID</label>
+    <input id="workflow-id" name="workflow-id" type="text" placeholder="my-workflow" required>
+  </div>
+  <div class="form__field">
+    <label for="workflow-title">Title</label>
+    <input id="workflow-title" name="workflow-title" type="text" placeholder="Human-friendly workflow title" required>
+  </div>
+  <div class="form__field">
+    <label for="workflow-description">Description</label>
+    <textarea id="workflow-description" name="workflow-description" placeholder="Explain what this workflow accomplishes"></textarea>
+  </div>
+  <div class="form__field">
+    <label for="workflow-message">Message</label>
+    <textarea id="workflow-message" name="workflow-message" placeholder="Optional run message shown to operators"></textarea>
+  </div>
+  <div class="form__field">
+    <div class="workflow-steps__header">
+      <h3>Steps</h3>
+      <button type="button"
   
   class="button"
   
@@ -145,17 +164,19 @@
   <span>Add Step</span>
 </button>
 
-          </div>
-          <div id="workflow-steps"></div>
-        </div>
-        <div class="form__actions">
-          <button type="button" class="button button--ghost" data-close-modal>Cancel</button>
-          <button type="submit" id="workflow-submit" class="button button--accent">Save Workflow</button>
-        </div>
-      </form>
+    </div>
+    <div id="workflow-steps"></div>
+  </div>
+  <div class="form__actions">
+    <button type="button" class="button button--ghost" data-close-modal>Cancel</button>
+    <button type="submit" id="workflow-submit" class="button button--accent">Save Workflow</button>
+  </div>
+</form>
+
     </div>
   </div>
 </div>
+
 <template id="workflow-step-template">
   <article class="card card--form workflow-step">
     <header class="workflow-step__header">

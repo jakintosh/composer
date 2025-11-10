@@ -1,0 +1,12 @@
+{{if .HasItems}}
+  <ul class="data-list">
+    {{range .Items}}
+      <li>
+        <span>{{.Primary}}</span>
+        {{if .HasSecondary}}
+          <span>{{.RenderSecondary}}</span>
+        {{end}}
+      </li>
+    {{end}}
+  </ul>
+{{end}}

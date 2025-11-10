@@ -1,0 +1,6 @@
+<p><strong>Run ID:</strong> {{.ID}}</p>
+<p><strong>Workflow:</strong> {{.WorkflowName}}</p>
+{{if .HasSteps}}
+  <h3>Steps</h3>
+  {{.RenderSteps}}
+{{end}}

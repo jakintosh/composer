@@ -1,0 +1,10 @@
+{{if .ID}}
+  <button type="button"
+          class="button button--accent button--sm"
+          data-open-run-modal
+          data-workflow-id="{{.ID}}"
+          data-workflow-display="{{.DisplayName}}"
+          aria-label="Start run for workflow {{.DisplayName}}">
+    Run
+  </button>
+{{end}}

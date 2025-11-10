@@ -1,0 +1,15 @@
+<li class="card card--collapsible">
+  <details class="collapsible">
+    <summary class="collapsible__summary">
+      <span class="collapsible__title">{{.Title}}</span>
+      {{if .HasSummaryItems}}
+        {{range .SummaryItems}}
+          {{.}}
+        {{end}}
+      {{end}}
+    </summary>
+    <div class="collapsible__content">
+      {{.RenderBody}}
+    </div>
+  </details>
+</li>

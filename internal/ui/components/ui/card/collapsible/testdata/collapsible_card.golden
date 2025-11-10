@@ -1,0 +1,15 @@
+<li class="card card--collapsible">
+  <details class="collapsible">
+    <summary class="collapsible__summary">
+      <span class="collapsible__title">Example</span>
+      
+        
+          <span>Extra</span>
+        
+      
+    </summary>
+    <div class="collapsible__content">
+      <p>Body</p>
+    </div>
+  </details>
+</li>

@@ -1,0 +1,8 @@
+<p><strong>ID:</strong> {{.ID}}</p>
+<p><strong>Display Name:</strong> {{.DisplayName}}</p>
+{{if .Description}}<p><strong>Description:</strong> {{.Description}}</p>{{end}}
+{{if .Message}}<p><strong>Message:</strong> {{.Message}}</p>{{end}}
+{{if .HasSteps}}
+  <h3>Steps</h3>
+  {{.RenderSteps}}
+{{end}}
