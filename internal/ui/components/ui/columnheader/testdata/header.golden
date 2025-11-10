@@ -1,0 +1,18 @@
+<header class="panel__header">
+  <h2 class="panel__title">Workflows</h2>
+  <div class="panel__actions">
+    
+      <button type="button"
+  id="create"
+  class="button button--accent"
+  title="Create workflow"
+  aria-label="Create workflow">
+  <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16">
+    <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  </svg>
+  <span>Create</span>
+</button>
+
+    
+  </div>
+</header>

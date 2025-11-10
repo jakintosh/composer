@@ -1,0 +1,31 @@
+<section class="panel panel--muted">
+  <header class="panel__header">
+  <h2 class="panel__title">Tasks</h2>
+  <div class="panel__actions">
+    
+  </div>
+</header>
+
+  
+    <ul class="panel__list waiting-list">
+      
+        <li>
+          <div class="waiting-group__header">
+            <span>Run A</span>
+            <span class="waiting-group__divider" aria-hidden="true"></span>
+          </div>
+          <ul class="waiting-group__tasks">
+            
+              <li class="card card--compact waiting-task">
+                <div class="waiting-task__name">Review</div>
+                
+                  <div class="waiting-task__description">Check</div>
+                
+              </li>
+            
+          </ul>
+        </li>
+      
+    </ul>
+  
+</section>

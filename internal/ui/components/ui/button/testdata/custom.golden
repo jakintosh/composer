@@ -1,0 +1,10 @@
+<button type="submit"
+  id="add-step"
+  class="button button--accent button--sm"
+  title="Create"
+  aria-label="Create item">
+  <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 16 16">
+    <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  </svg>
+  <span>Create</span>
+</button>
