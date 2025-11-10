@@ -1,21 +1,11 @@
 package column
 
 import (
-	_ "embed"
-	"html/template"
+	g "maragu.dev/gomponents"
+	"maragu.dev/gomponents/html"
 
-	"composer/internal/ui/templates"
-	"composer/pkg/ui/components/columnheader"
-)
-
-//go:embed column.tmpl
-var columnTemplate string
-
-var tmpl = templates.New(
-	"waiting_column",
-	"internal/ui/components/waiting_column/column.tmpl",
-	columnTemplate,
-	nil,
+	"composer/internal/ui/components/columnheader"
+	"composer/internal/ui/components/panel"
 )
 
 // Task represents a single waiting task awaiting user interaction.
@@ -40,17 +30,58 @@ type Props struct {
 	Groups []Group
 }
 
-// RenderHeader renders the nested header component.
-func (p Props) RenderHeader() template.HTML {
-	return templates.SafeHTML(columnheader.Render(p.Header))
+// Column renders the waiting tasks column, including empty states.
+func Column(p Props) g.Node {
+	return panel.Section(panel.SectionProps{
+		Header:  p.Header,
+		Variant: panel.VariantMuted,
+		Body:    waitingGroups(p.Groups),
+	})
 }
 
-// Render executes the template for the waiting column component.
-func Render(p Props) (template.HTML, error) {
-	return tmpl.Render(p)
+func waitingGroups(groups []Group) g.Node {
+	if len(groups) == 0 {
+		return html.P(g.Text("No waiting tasks."))
+	}
+
+	items := make([]g.Node, 0, len(groups))
+	for _, group := range groups {
+		items = append(items, html.Li(
+			html.Div(
+				html.Class("waiting-group__header"),
+				html.Span(g.Text(group.RunDisplayName)),
+				html.Span(
+					html.Class("waiting-group__divider"),
+					html.Aria("hidden", "true"),
+				),
+			),
+			html.Ul(
+				html.Class("waiting-group__tasks"),
+				g.Group(waitingTasks(group.Tasks)),
+			),
+		))
+	}
+
+	return html.Ul(
+		html.Class("panel__list waiting-list"),
+		g.Group(items),
+	)
 }
 
-// MustRender wraps Render and converts failures into HTML comments.
-func MustRender(p Props) template.HTML {
-	return templates.SafeHTML(Render(p))
+func waitingTasks(tasks []Task) []g.Node {
+	nodes := make([]g.Node, 0, len(tasks))
+	for _, task := range tasks {
+		nodes = append(nodes, html.Li(
+			html.Class("card card--compact waiting-task"),
+			html.Div(
+				html.Class("waiting-task__name"),
+				g.Text(task.Name),
+			),
+			g.If(task.Description != "", html.Div(
+				html.Class("waiting-task__description"),
+				g.Text(task.Description),
+			)),
+		))
+	}
+	return nodes
 }

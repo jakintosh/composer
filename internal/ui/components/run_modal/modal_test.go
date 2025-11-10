@@ -3,14 +3,11 @@ package modal
 import (
 	"testing"
 
+	"composer/internal/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 
 func TestRenderRunModal(t *testing.T) {
-	html, err := Render(Props{})
-	if err != nil {
-		t.Fatalf("render error: %v", err)
-	}
-
-	golden.Assert(t, string(html), "modal.golden")
+	html := testutil.Render(t, Modal(Props{}))
+	golden.Assert(t, html, "modal.golden")
 }

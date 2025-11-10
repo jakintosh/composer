@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"composer/internal/ui/templates"
 )
 
 //go:embed static/*
@@ -26,8 +24,6 @@ type Server struct {
 }
 
 func newServer(mode Mode) (*Server, error) {
-	templates.Configure(uiSourceRoot())
-
 	provider, err := newProvider(mode)
 	if err != nil {
 		return nil, err

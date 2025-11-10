@@ -4,13 +4,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	sidebar "composer/internal/ui/components/navigation_sidebar"
+	"composer/internal/ui/components/button"
+	"composer/internal/ui/components/columnheader"
 	column "composer/internal/ui/components/run_column"
+	sidebar "composer/internal/ui/components/sidebar"
 	waitingcolumn "composer/internal/ui/components/waiting_column"
 	workflowcolumn "composer/internal/ui/components/workflow_column"
 	workflowmodal "composer/internal/ui/components/workflow_modal"
-	"composer/pkg/ui/components/button"
-	"composer/pkg/ui/components/columnheader"
+	"composer/internal/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 
@@ -31,10 +32,6 @@ func TestRenderDashboardPage(t *testing.T) {
 		TaskColumn: waitingcolumn.Props{Header: columnheader.Props{Title: "Tasks"}},
 	}
 
-	html, err := HTML(props)
-	if err != nil {
-		t.Fatalf("render error: %v", err)
-	}
-
-	golden.Assert(t, string(html), filepath.Join("fixtures", "dashboard.golden"))
+	html := testutil.Render(t, Page(props))
+	golden.Assert(t, html, filepath.Join("fixtures", "dashboard.golden"))
 }

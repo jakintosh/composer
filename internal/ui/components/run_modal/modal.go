@@ -1,57 +1,118 @@
 package modal
 
 import (
-	_ "embed"
-	"html/template"
+	g "maragu.dev/gomponents"
+	"maragu.dev/gomponents/html"
 
-	"composer/internal/ui/templates"
-	modalshell "composer/pkg/ui/components/modalshell"
+	"composer/internal/ui/components/button"
+	"composer/internal/ui/components/modal"
 )
 
-//go:embed modal.tmpl
-var modalTemplate string
-
-var tmpl = templates.New(
-	"run_modal",
-	"internal/ui/components/run_modal/modal.tmpl",
-	modalTemplate,
-	nil,
-)
-
-//go:embed body.tmpl
-var bodyTemplate string
-
-var bodyTmpl = templates.New(
-	"run_modal_body",
-	"internal/ui/components/run_modal/body.tmpl",
-	bodyTemplate,
-	nil,
-)
-
-// Props contains the data required to render the run modal. It currently has no
-// configurable fields but exists for future extensibility.
+// Props contains the data required to render the run modal.
 type Props struct{}
 
-// RenderShell renders the shared modal shell with the run form body.
-func (p Props) RenderShell() template.HTML {
-	return modalshell.MustRender(modalshell.Props{
+// Modal renders the run modal shell and form.
+func Modal(Props) g.Node {
+	return modal.Shell(modal.Props{
 		ID:         "run-modal",
 		Title:      "Start Run",
 		CloseLabel: "Close start run form",
-		Body:       renderBody(),
+		Body:       runForm(),
 	})
 }
 
-// Render executes the template for the run modal component.
-func Render(p Props) (template.HTML, error) {
-	return tmpl.Render(p)
+func runForm() g.Node {
+	return g.Group([]g.Node{
+		html.Div(
+			html.ID("run-form-error"),
+			html.Class("alert alert--error"),
+			g.Attr("role", "alert"),
+		),
+		html.Form(
+			html.ID("run-form"),
+			inputField("run-workflow-name", "Workflow Name",
+				html.Input(
+					html.ID("run-workflow-name"),
+					html.Name("run-workflow-name"),
+					html.Type("text"),
+					html.ReadOnly(),
+					html.Aria("readonly", "true"),
+				),
+			),
+			inputField("run-workflow-id", "Workflow ID",
+				html.Input(
+					html.ID("run-workflow-id"),
+					html.Name("run-workflow-id"),
+					html.Type("text"),
+					html.ReadOnly(),
+					html.Aria("readonly", "true"),
+				),
+			),
+			formField(
+				html.Label(
+					html.For("run-name"),
+					g.Text("Display Name"),
+				),
+				html.Input(
+					html.ID("run-name"),
+					html.Name("run-name"),
+					html.Type("text"),
+					html.Placeholder("My Example Run"),
+					html.Required(),
+				),
+				html.P(
+					html.Class("form__hint"),
+					g.Text("Shown in the dashboard. Choose something descriptive."),
+				),
+				html.P(
+					html.Class("form__hint"),
+					g.Text("Run ID (used for CLI commands): "),
+					html.Code(
+						html.ID("run-id-preview"),
+						g.Text("—"),
+					),
+				),
+			),
+			html.Input(
+				html.ID("run-id"),
+				html.Name("run-id"),
+				html.Type("hidden"),
+			),
+			html.Div(
+				html.Class("form__actions"),
+				button.Button(button.Props{
+					Label:    "Cancel",
+					Class:    "button--ghost",
+					HideIcon: true,
+					Data: map[string]string{
+						"close-modal": "",
+					},
+				}),
+				button.Button(button.Props{
+					ID:       "run-submit",
+					Label:    "Start Run",
+					Class:    "button--accent",
+					HideIcon: true,
+					Type:     "submit",
+				}),
+			),
+		),
+	})
 }
 
-// MustRender wraps Render and converts failures into HTML comments.
-func MustRender(p Props) template.HTML {
-	return templates.SafeHTML(Render(p))
+func inputField(id, label string, control g.Node) g.Node {
+	return formField(
+		html.Label(
+			html.For(id),
+			g.Text(label),
+		),
+		control,
+	)
 }
 
-func renderBody() template.HTML {
-	return templates.SafeHTML(bodyTmpl.Render(struct{}{}))
+func formField(children ...g.Node) g.Node {
+	return html.Div(
+		html.Class("form__field"),
+		g.Group(children),
+	)
 }

@@ -3,7 +3,8 @@ package column
 import (
 	"testing"
 
-	"composer/pkg/ui/components/columnheader"
+	"composer/internal/ui/components/columnheader"
+	"composer/internal/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 
@@ -24,10 +25,6 @@ func TestRenderRunColumn(t *testing.T) {
 		},
 	}
 
-	html, err := Render(props)
-	if err != nil {
-		t.Fatalf("render error: %v", err)
-	}
-
-	golden.Assert(t, string(html), "column.golden")
+	html := testutil.Render(t, Column(props))
+	golden.Assert(t, html, "column.golden")
 }

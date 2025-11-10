@@ -1,44 +1,17 @@
 package column
 
 import (
-	_ "embed"
-	"html/template"
+	"fmt"
+	"strings"
 
-	"composer/internal/ui/templates"
-	cardcollapsible "composer/pkg/ui/components/cardcollapsible"
-	"composer/pkg/ui/components/columnheader"
-	"composer/pkg/ui/components/datalist"
-	"composer/pkg/ui/components/panel"
-)
+	g "maragu.dev/gomponents"
+	"maragu.dev/gomponents/html"
 
-//go:embed column.tmpl
-var columnTemplate string
-
-var tmpl = templates.New(
-	"workflow_column",
-	"internal/ui/components/workflow_column/column.tmpl",
-	columnTemplate,
-	nil,
-)
-
-//go:embed body.tmpl
-var bodyTemplate string
-
-var bodyTmpl = templates.New(
-	"workflow_column_body",
-	"internal/ui/components/workflow_column/body.tmpl",
-	bodyTemplate,
-	nil,
-)
-
-//go:embed run_button.tmpl
-var runButtonTemplate string
-
-var runButtonTmpl = templates.New(
-	"workflow_column_run_button",
-	"internal/ui/components/workflow_column/run_button.tmpl",
-	runButtonTemplate,
-	nil,
+	"composer/internal/ui/components/button"
+	"composer/internal/ui/components/card"
+	"composer/internal/ui/components/columnheader"
+	"composer/internal/ui/components/datalist"
+	"composer/internal/ui/components/panel"
 )
 
 // Workflow represents a single workflow card in the column.
@@ -56,81 +29,91 @@ type Props struct {
 	Workflows []Workflow
 }
 
-// RenderSection renders the shared panel section with the workflow list.
-func (p Props) RenderSection() template.HTML {
-	section := panel.SectionProps{
+// Column renders the workflow column, including empty states.
+func Column(p Props) g.Node {
+	return panel.Section(panel.SectionProps{
 		Header: p.Header,
-		Body: panel.MustRenderList(panel.ListProps{
-			Items:        p.listItems(),
+		Body: panel.List(panel.ListProps{
+			Items:        workflowItems(p.Workflows),
 			EmptyMessage: "No workflows available.",
 		}),
-	}
-	return panel.MustRenderSection(section)
+	})
 }
 
-// Render executes the component template.
-func Render(p Props) (template.HTML, error) {
-	return tmpl.Render(p)
-}
-
-// MustRender wraps Render and converts failures into HTML comments.
-func MustRender(p Props) template.HTML {
-	return templates.SafeHTML(Render(p))
-}
-
-func (p Props) listItems() []panel.ListItemProps {
-	if len(p.Workflows) == 0 {
+func workflowItems(workflows []Workflow) []panel.ListItemProps {
+	if len(workflows) == 0 {
 		return nil
 	}
-	items := make([]panel.ListItemProps, 0, len(p.Workflows))
-	for _, wf := range p.Workflows {
+	items := make([]panel.ListItemProps, 0, len(workflows))
+	for _, wf := range workflows {
+		workflow := wf
 		items = append(items, panel.ListItemProps{
 			DisableWrapper: true,
-			Content: cardcollapsible.MustRender(cardcollapsible.Props{
-				Title:        wf.DisplayName,
-				SummaryItems: renderWorkflowSummaryItems(wf),
-				Body:         renderWorkflowBody(wf),
+			Content: card.Card(card.Props{
+				Title:        workflow.DisplayName,
+				SummaryItems: workflowSummaryItems(workflow),
+				Body:         workflowBody(workflow),
 			}),
 		})
 	}
 	return items
 }
 
-func renderWorkflowSummaryItems(w Workflow) []template.HTML {
-	if w.ID == "" {
+func workflowSummaryItems(w Workflow) []g.Node {
+	id := strings.TrimSpace(w.ID)
+	if id == "" {
 		return nil
 	}
-	return []template.HTML{
-		templates.SafeHTML(runButtonTmpl.Render(w)),
+
+	label := fmt.Sprintf("Start run for workflow %s", strings.TrimSpace(w.DisplayName))
+	return []g.Node{
+		button.Button(button.Props{
+			Label:     "Run",
+			Class:     "button--accent button--sm",
+			HideIcon:  true,
+			AriaLabel: label,
+			Data: map[string]string{
+				"open-run-modal":   "",
+				"workflow-id":      id,
+				"workflow-display": w.DisplayName,
+			},
+		}),
 	}
 }
 
-func renderWorkflowBody(w Workflow) template.HTML {
-	var steps template.HTML
-	if len(w.StepNames) > 0 {
-		items := make([]datalist.Item, 0, len(w.StepNames))
-		for _, name := range w.StepNames {
-			items = append(items, datalist.Item{Primary: name})
-		}
-		steps = datalist.MustRender(datalist.Props{Items: items})
+func workflowBody(w Workflow) g.Node {
+	rows := []g.Node{
+		infoRow("ID:", w.ID),
+		infoRow("Display Name:", w.DisplayName),
 	}
-
-	props := workflowBodyProps{
-		Workflow: w,
-		Steps:    steps,
+	if strings.TrimSpace(w.Description) != "" {
+		rows = append(rows, infoRow("Description:", w.Description))
 	}
-	return templates.SafeHTML(bodyTmpl.Render(props))
+	if strings.TrimSpace(w.Message) != "" {
+		rows = append(rows, infoRow("Message:", w.Message))
+	}
+	if steps := workflowSteps(w.StepNames); steps != nil {
+		rows = append(rows, html.H3(g.Text("Steps")), steps)
+	}
+	return g.Group(rows)
 }
 
-type workflowBodyProps struct {
-	Workflow
-	Steps template.HTML
+func infoRow(label, value string) g.Node {
+	return html.P(
+		html.Strong(g.Text(label+" ")),
+		g.Text(value),
+	)
 }
 
-func (p workflowBodyProps) HasSteps() bool {
-	return len(p.Steps) > 0
-}
-
-func (p workflowBodyProps) RenderSteps() template.HTML {
-	return p.Steps
+func workflowSteps(stepNames []string) g.Node {
+	if len(stepNames) == 0 {
+		return nil
+	}
+	items := make([]datalist.Item, 0, len(stepNames))
+	for _, name := range stepNames {
+		items = append(items, datalist.Item{
+			Primary: name,
+		})
+	}
+	return datalist.List(datalist.Props{Items: items})
 }

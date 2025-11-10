@@ -1,45 +1,18 @@
 package column
 
 import (
-	_ "embed"
-	"html/template"
+	"fmt"
+	"strings"
 
-	"composer/internal/ui/templates"
-	cardcollapsible "composer/pkg/ui/components/cardcollapsible"
-	"composer/pkg/ui/components/columnheader"
-	"composer/pkg/ui/components/datalist"
-	"composer/pkg/ui/components/panel"
-	"composer/pkg/ui/components/statusbadge"
-)
+	g "maragu.dev/gomponents"
+	"maragu.dev/gomponents/html"
 
-//go:embed column.tmpl
-var columnTemplate string
-
-var tmpl = templates.New(
-	"run_column",
-	"internal/ui/components/run_column/column.tmpl",
-	columnTemplate,
-	nil,
-)
-
-//go:embed body.tmpl
-var bodyTemplate string
-
-var bodyTmpl = templates.New(
-	"run_column_body",
-	"internal/ui/components/run_column/body.tmpl",
-	bodyTemplate,
-	nil,
-)
-
-//go:embed tick_button.tmpl
-var tickButtonTemplate string
-
-var tickButtonTmpl = templates.New(
-	"run_column_tick_button",
-	"internal/ui/components/run_column/tick_button.tmpl",
-	tickButtonTemplate,
-	nil,
+	"composer/internal/ui/components/button"
+	"composer/internal/ui/components/card"
+	"composer/internal/ui/components/columnheader"
+	"composer/internal/ui/components/datalist"
+	"composer/internal/ui/components/panel"
+	"composer/internal/ui/components/statusbadge"
 )
 
 // Step represents a single workflow step state within a run.
@@ -65,91 +38,90 @@ type Props struct {
 	Runs   []Run
 }
 
-// RenderSection renders the panel section that wraps the run list.
-func (p Props) RenderSection() template.HTML {
-	section := panel.SectionProps{
+// Column renders the runs column including an empty state.
+func Column(p Props) g.Node {
+	return panel.Section(panel.SectionProps{
 		Header: p.Header,
-		Body: panel.MustRenderList(panel.ListProps{
-			Items:        p.listItems(),
+		Body: panel.List(panel.ListProps{
+			Items:        runItems(p.Runs),
 			EmptyMessage: "No runs found.",
 		}),
-	}
-	return panel.MustRenderSection(section)
+	})
 }
 
-// Render executes the template for the run column component.
-func Render(p Props) (template.HTML, error) {
-	return tmpl.Render(p)
-}
-
-// MustRender wraps Render and converts failures into HTML comments.
-func MustRender(p Props) template.HTML {
-	return templates.SafeHTML(Render(p))
-}
-
-func (p Props) listItems() []panel.ListItemProps {
-	if len(p.Runs) == 0 {
+func runItems(runs []Run) []panel.ListItemProps {
+	if len(runs) == 0 {
 		return nil
 	}
-	items := make([]panel.ListItemProps, 0, len(p.Runs))
-	for _, run := range p.Runs {
+	items := make([]panel.ListItemProps, 0, len(runs))
+	for _, run := range runs {
+		current := run
 		items = append(items, panel.ListItemProps{
 			DisableWrapper: true,
-			Content: cardcollapsible.MustRender(cardcollapsible.Props{
-				Title:        run.DisplayName,
-				SummaryItems: renderRunSummaryItems(run),
-				Body:         renderRunBody(run),
+			Content: card.Card(card.Props{
+				Title:        current.DisplayName,
+				SummaryItems: runSummaryItems(current),
+				Body:         runBody(current),
 			}),
 		})
 	}
 	return items
 }
 
-func renderRunSummaryItems(run Run) []template.HTML {
-	items := []template.HTML{
-		statusbadge.MustRender(statusbadge.Props{
+func runSummaryItems(run Run) []g.Node {
+	items := []g.Node{
+		statusbadge.Badge(statusbadge.Props{
 			Label:   run.StateLabel,
 			Variant: run.StateClass,
 		}),
 	}
-	if run.ID != "" {
-		items = append(items, templates.SafeHTML(tickButtonTmpl.Render(run)))
+
+	if id := strings.TrimSpace(run.ID); id != "" {
+		items = append(items, button.Button(button.Props{
+			Label:     "Tick",
+			Class:     "button--primary button--sm run-tick-button",
+			HideIcon:  true,
+			AriaLabel: fmt.Sprintf("Run tick for %s", run.DisplayName),
+			Data: map[string]string{
+				"run-id":      id,
+				"run-display": run.DisplayName,
+			},
+		}))
 	}
 	return items
 }
 
-func renderRunBody(run Run) template.HTML {
-	var steps template.HTML
-	if len(run.Steps) > 0 {
-		items := make([]datalist.Item, 0, len(run.Steps))
-		for _, step := range run.Steps {
-			items = append(items, datalist.Item{
-				Primary: step.Name,
-				Secondary: statusbadge.MustRender(statusbadge.Props{
-					Label:   step.Status,
-					Variant: step.StatusClass,
-				}),
-			})
-		}
-		steps = datalist.MustRender(datalist.Props{Items: items})
+func runBody(run Run) g.Node {
+	rows := []g.Node{
+		infoRow("Run ID:", run.ID),
+		infoRow("Workflow:", run.WorkflowName),
 	}
-
-	props := runBodyProps{
-		Run:   run,
-		Steps: steps,
+	if steps := runSteps(run.Steps); steps != nil {
+		rows = append(rows, html.H3(g.Text("Steps")), steps)
 	}
-	return templates.SafeHTML(bodyTmpl.Render(props))
+	return g.Group(rows)
 }
 
-type runBodyProps struct {
-	Run
-	Steps template.HTML
+func runSteps(steps []Step) g.Node {
+	if len(steps) == 0 {
+		return nil
+	}
+	items := make([]datalist.Item, 0, len(steps))
+	for _, step := range steps {
+		items = append(items, datalist.Item{
+			Primary: step.Name,
+			Secondary: statusbadge.Badge(statusbadge.Props{
+				Label:   step.Status,
+				Variant: step.StatusClass,
+			}),
+		})
+	}
+	return datalist.List(datalist.Props{Items: items})
 }
 
-func (p runBodyProps) HasSteps() bool {
-	return len(p.Steps) > 0
-}
-
-func (p runBodyProps) RenderSteps() template.HTML {
-	return p.Steps
+func infoRow(label, value string) g.Node {
+	return html.P(
+		html.Strong(g.Text(label+" ")),
+		g.Text(value),
+	)
 }
