@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"composer/internal/orchestrator"
-	sidebar "composer/internal/ui/components/navigation/sidebar"
-	runcolumn "composer/internal/ui/components/run/column"
-	"composer/internal/ui/components/ui/button"
-	"composer/internal/ui/components/ui/columnheader"
-	waitingcolumn "composer/internal/ui/components/waiting/column"
-	workflowcolumn "composer/internal/ui/components/workflow/column"
+	sidebar "composer/internal/ui/components/navigation_sidebar"
+	runcolumn "composer/internal/ui/components/run_column"
+	waitingcolumn "composer/internal/ui/components/waiting_column"
+	workflowcolumn "composer/internal/ui/components/workflow_column"
 	dashboardpage "composer/internal/ui/pages/dashboard"
 	"composer/internal/workflow"
+	"composer/pkg/ui/components/button"
+	"composer/pkg/ui/components/columnheader"
 )
 
 func buildDashboardModel(

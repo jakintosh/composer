@@ -4,13 +4,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"composer/internal/ui/components/navigation/sidebar"
-	"composer/internal/ui/components/run/column"
-	"composer/internal/ui/components/ui/button"
-	"composer/internal/ui/components/ui/columnheader"
-	waitingcolumn "composer/internal/ui/components/waiting/column"
-	workflowcolumn "composer/internal/ui/components/workflow/column"
-	workflowmodal "composer/internal/ui/components/workflow/modal"
+	sidebar "composer/internal/ui/components/navigation_sidebar"
+	column "composer/internal/ui/components/run_column"
+	waitingcolumn "composer/internal/ui/components/waiting_column"
+	workflowcolumn "composer/internal/ui/components/workflow_column"
+	workflowmodal "composer/internal/ui/components/workflow_modal"
+	"composer/pkg/ui/components/button"
+	"composer/pkg/ui/components/columnheader"
 	"gotest.tools/v3/golden"
 )
 

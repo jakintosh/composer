@@ -5,14 +5,14 @@ import (
 	"html/template"
 	"io"
 
-	"composer/internal/ui/components/navigation/sidebar"
-	runcolumn "composer/internal/ui/components/run/column"
-	runmodal "composer/internal/ui/components/run/modal"
-	"composer/internal/ui/components/ui/button"
-	waitingcolumn "composer/internal/ui/components/waiting/column"
-	workflowcolumn "composer/internal/ui/components/workflow/column"
-	workflowmodal "composer/internal/ui/components/workflow/modal"
+	sidebar "composer/internal/ui/components/navigation_sidebar"
+	runcolumn "composer/internal/ui/components/run_column"
+	runmodal "composer/internal/ui/components/run_modal"
+	waitingcolumn "composer/internal/ui/components/waiting_column"
+	workflowcolumn "composer/internal/ui/components/workflow_column"
+	workflowmodal "composer/internal/ui/components/workflow_modal"
 	"composer/internal/ui/templates"
+	"composer/pkg/ui/components/button"
 )
 
 //go:embed dashboard.tmpl

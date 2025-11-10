@@ -17,7 +17,7 @@ Each component resides in its own package and consists of three key files:
 
 Standard html/template file defining the raw HTML structure. It uses data from the Props struct.
 ```html
-<!-- internal/ui/components/ui/button/button.tmpl -->
+<!-- pkg/ui/components/button/button.tmpl -->
 <button class="button {{ .Variant }}">
   {{.Label}}
 </button>
@@ -29,7 +29,7 @@ central `templates.Manager` to parse embedded templates once in production and r
 from disk in development.
 
 ```go
-// internal/ui/components/ui/button/button.go
+// pkg/ui/components/button/button.go
 package button
 
 import (
@@ -44,7 +44,7 @@ var buttonTemplate string
 
 var tmpl = templates.New(
     "ui_button",
-    "components/ui/button/button.tmpl",
+    "pkg/ui/components/button/button.tmpl",
     buttonTemplate,
     nil,
 )
