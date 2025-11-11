@@ -1,4 +1,4 @@
-package sidebar
+package components
 
 import (
 	"strings"
@@ -7,21 +7,21 @@ import (
 	"maragu.dev/gomponents/html"
 )
 
-// Link denotes a navigational item in the sidebar menu.
-type Link struct {
+// SidebarLink denotes a navigational item in the sidebar menu.
+type SidebarLink struct {
 	Label  string
 	Href   string
 	Active bool
 }
 
-// Props represents the layout of the primary navigation sidebar.
-type Props struct {
+// SidebarProps represents the layout of the primary navigation sidebar.
+type SidebarProps struct {
 	Title string
-	Links []Link
+	Links []SidebarLink
 }
 
 // Sidebar renders the navigation chrome.
-func Sidebar(p Props) g.Node {
+func Sidebar(p SidebarProps) g.Node {
 	var title g.Node = g.Group(nil)
 	if strings.TrimSpace(p.Title) != "" {
 		title = html.Div(

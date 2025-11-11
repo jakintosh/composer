@@ -1,4 +1,4 @@
-package modal
+package components
 
 import (
 	"strings"
@@ -7,8 +7,8 @@ import (
 	"maragu.dev/gomponents/html"
 )
 
-// Props defines the chrome rendered around a modal body.
-type Props struct {
+// ModalProps defines the chrome rendered around a modal body.
+type ModalProps struct {
 	ID         string
 	Title      string
 	TitleID    string
@@ -17,7 +17,7 @@ type Props struct {
 }
 
 // DialogLabelID returns the DOM id used for aria-labelledby.
-func (p Props) DialogLabelID() string {
+func (p ModalProps) DialogLabelID() string {
 	switch {
 	case strings.TrimSpace(p.TitleID) != "":
 		return strings.TrimSpace(p.TitleID)
@@ -29,15 +29,15 @@ func (p Props) DialogLabelID() string {
 }
 
 // CloseLabelText returns the accessible label for the close button.
-func (p Props) CloseLabelText() string {
+func (p ModalProps) CloseLabelText() string {
 	if label := strings.TrimSpace(p.CloseLabel); label != "" {
 		return label
 	}
 	return "Close dialog"
 }
 
-// Shell renders the full modal chrome including the provided body.
-func Shell(p Props) g.Node {
+// ModalShell renders the full modal chrome including the provided body.
+func ModalShell(p ModalProps) g.Node {
 	var body g.Node = g.Group(nil)
 	if p.Body != nil {
 		body = p.Body

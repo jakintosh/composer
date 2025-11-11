@@ -1,4 +1,4 @@
-package sidebar
+package components
 
 import (
 	"testing"
@@ -8,9 +8,9 @@ import (
 )
 
 func TestRenderSidebar(t *testing.T) {
-	props := Props{
+	props := SidebarProps{
 		Title: "Composer",
-		Links: []Link{
+		Links: []SidebarLink{
 			{Label: "Dashboard", Href: "/", Active: true},
 			{Label: "Runs", Href: "/runs"},
 		},

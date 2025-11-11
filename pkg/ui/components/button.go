@@ -1,4 +1,4 @@
-package button
+package components
 
 import (
 	"sort"
@@ -9,9 +9,9 @@ import (
 	"maragu.dev/gomponents/html"
 )
 
-// Props describes the configuration for rendering a call-to-action button with
+// ButtonProps describes the configuration for rendering a call-to-action button with
 // an optional label and icon.
-type Props struct {
+type ButtonProps struct {
 	ID        string
 	Class     string
 	Title     string
@@ -24,7 +24,7 @@ type Props struct {
 }
 
 // Button renders the configured button as a gomponent tree.
-func Button(p Props) g.Node {
+func Button(p ButtonProps) g.Node {
 	size := p.IconSize
 	if size == 0 {
 		size = 16

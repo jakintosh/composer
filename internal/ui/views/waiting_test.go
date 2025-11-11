@@ -1,4 +1,4 @@
-package waiting
+package views
 
 import (
 	"testing"
@@ -8,21 +8,21 @@ import (
 )
 
 func TestRenderWaitingColumn(t *testing.T) {
-	props := ColumnProps{
+	props := WaitingColumnProps{
 		Title: "Tasks",
-		Groups: []Group{
+		Groups: []WaitingGroup{
 			{
 				RunID:          "run-a",
 				RunDisplayName: "Run A",
 				WorkflowName:   "Alpha",
 				TaskCount:      1,
-				Tasks: []Task{
+				Tasks: []WaitingTask{
 					{Name: "Review", Description: "Check"},
 				},
 			},
 		},
 	}
 
-	html := testutil.Render(t, Column(props))
-	golden.Assert(t, html, "column.golden")
+	html := testutil.Render(t, WaitingColumn(props))
+	golden.Assert(t, html, "waiting_column.golden")
 }

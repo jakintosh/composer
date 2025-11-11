@@ -4,30 +4,27 @@ import (
 	"path/filepath"
 	"testing"
 
-	"composer/internal/ui/components/button"
-	runcomponent "composer/internal/ui/components/run"
-	sidebar "composer/internal/ui/components/sidebar"
-	waitingcomponent "composer/internal/ui/components/waiting"
-	workflowcomponent "composer/internal/ui/components/workflow"
+	"composer/pkg/ui/components"
 	"composer/internal/ui/testutil"
+	"composer/internal/ui/views"
 	"gotest.tools/v3/golden"
 )
 
 func TestRenderDashboardPage(t *testing.T) {
 	props := Props{
-		Sidebar: sidebar.Props{
+		Sidebar: components.SidebarProps{
 			Title: "Composer",
-			Links: []sidebar.Link{{Label: "Dashboard", Href: "/", Active: true}},
+			Links: []components.SidebarLink{{Label: "Dashboard", Href: "/", Active: true}},
 		},
-		WorkflowColumn: workflowcomponent.ColumnProps{
+		WorkflowColumn: views.WorkflowColumnProps{
 			Title: "Workflows",
 		},
-		WorkflowModal: workflowcomponent.ModalProps{
-			AddStepButton: button.Props{Label: "Add Step"},
+		WorkflowModal: views.WorkflowModalProps{
+			AddStepButton: components.ButtonProps{Label: "Add Step"},
 		},
-		RunColumn:  runcomponent.ColumnProps{Title: "Runs"},
+		RunColumn:  views.RunColumnProps{Title: "Runs"},
 		RunModal:   DefaultRunModal(),
-		TaskColumn: waitingcomponent.ColumnProps{Title: "Tasks"},
+		TaskColumn: views.WaitingColumnProps{Title: "Tasks"},
 	}
 
 	html := testutil.Render(t, Page(props))

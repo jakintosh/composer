@@ -5,12 +5,9 @@ import (
 	"strings"
 
 	"composer/internal/orchestrator"
-	"composer/internal/ui/components/button"
-	runcomponent "composer/internal/ui/components/run"
-	sidebar "composer/internal/ui/components/sidebar"
-	waitingcomponent "composer/internal/ui/components/waiting"
-	workflowcomponent "composer/internal/ui/components/workflow"
+	"composer/pkg/ui/components"
 	dashboardpage "composer/internal/ui/pages/dashboard"
+	"composer/internal/ui/views"
 	"composer/internal/workflow"
 )
 
@@ -19,9 +16,9 @@ func buildDashboardModel(
 	runs []workflow.RunState,
 	waitingTasks map[string][]orchestrator.WaitingTask,
 ) dashboardpage.Props {
-	workflowVMs := make([]workflowcomponent.Workflow, 0, len(workflows))
+	workflowVMs := make([]views.WorkflowView, 0, len(workflows))
 	for _, wf := range workflows {
-		workflowVMs = append(workflowVMs, workflowcomponent.Workflow{
+		workflowVMs = append(workflowVMs, views.WorkflowView{
 			DisplayName: strings.TrimSpace(wf.DisplayName),
 			ID:          strings.TrimSpace(wf.ID),
 			Description: strings.TrimSpace(wf.Description),
@@ -33,7 +30,7 @@ func buildDashboardModel(
 		return workflowVMs[i].DisplayName < workflowVMs[j].DisplayName
 	})
 
-	runVMs := make([]runcomponent.Run, 0, len(runs))
+	runVMs := make([]views.RunView, 0, len(runs))
 	for _, runState := range runs {
 		status := summarizeRunState(runState)
 		stepNames := sortedStepNames(runState.StepStates)
@@ -41,17 +38,17 @@ func buildDashboardModel(
 		displayName := strings.TrimSpace(runState.Name)
 		runID := strings.TrimSpace(runState.ID)
 
-		steps := make([]runcomponent.Step, 0, len(stepNames))
+		steps := make([]views.RunStep, 0, len(stepNames))
 		for _, name := range stepNames {
 			stepState := runState.StepStates[name]
-			steps = append(steps, runcomponent.Step{
+			steps = append(steps, views.RunStep{
 				Name:        name,
 				Status:      string(stepState.Status),
 				StatusClass: stateClassForStatus(stepState.Status),
 			})
 		}
 
-		runVMs = append(runVMs, runcomponent.Run{
+		runVMs = append(runVMs, views.RunView{
 			DisplayName:  displayName,
 			ID:           runID,
 			StateLabel:   status.Label,
@@ -64,7 +61,7 @@ func buildDashboardModel(
 		return runVMs[i].DisplayName < runVMs[j].DisplayName
 	})
 
-	taskGroupVMs := make([]waitingcomponent.Group, 0, len(waitingTasks))
+	taskGroupVMs := make([]views.WaitingGroup, 0, len(waitingTasks))
 	for _, runState := range runs {
 		runID := strings.TrimSpace(runState.ID)
 		displayName := strings.TrimSpace(runState.Name)
@@ -77,9 +74,9 @@ func buildDashboardModel(
 			continue
 		}
 
-		taskVMs := make([]waitingcomponent.Task, 0, len(tasks))
+		taskVMs := make([]views.WaitingTask, 0, len(tasks))
 		for _, task := range tasks {
-			taskVMs = append(taskVMs, waitingcomponent.Task{
+			taskVMs = append(taskVMs, views.WaitingTask{
 				Name:        strings.TrimSpace(task.Name),
 				Description: strings.TrimSpace(task.Description),
 				Prompt:      strings.TrimSpace(task.Prompt),
@@ -90,7 +87,7 @@ func buildDashboardModel(
 			return taskVMs[i].Name < taskVMs[j].Name
 		})
 
-		taskGroupVMs = append(taskGroupVMs, waitingcomponent.Group{
+		taskGroupVMs = append(taskGroupVMs, views.WaitingGroup{
 			RunID:          runID,
 			RunDisplayName: displayName,
 			WorkflowName:   strings.TrimSpace(runState.WorkflowName),
@@ -103,9 +100,9 @@ func buildDashboardModel(
 	})
 
 	return dashboardpage.Props{
-		Sidebar: sidebar.Props{
+		Sidebar: components.SidebarProps{
 			Title: "Composer",
-			Links: []sidebar.Link{
+			Links: []components.SidebarLink{
 				{
 					Label:  "Dashboard",
 					Href:   "/",
@@ -113,9 +110,9 @@ func buildDashboardModel(
 				},
 			},
 		},
-		WorkflowColumn: workflowcomponent.ColumnProps{
+		WorkflowColumn: views.WorkflowColumnProps{
 			Title: "Workflows",
-			Actions: []button.Props{
+			Actions: []components.ButtonProps{
 				{
 					ID:        "open-workflow-modal",
 					Class:     "button--accent button--icon",
@@ -128,12 +125,12 @@ func buildDashboardModel(
 			Workflows: workflowVMs,
 		},
 		WorkflowModal: dashboardpage.DefaultWorkflowModal(),
-		RunColumn: runcomponent.ColumnProps{
+		RunColumn: views.RunColumnProps{
 			Title: "Runs",
 			Runs:  runVMs,
 		},
 		RunModal: dashboardpage.DefaultRunModal(),
-		TaskColumn: waitingcomponent.ColumnProps{
+		TaskColumn: views.WaitingColumnProps{
 			Title:  "Tasks",
 			Groups: taskGroupVMs,
 		},

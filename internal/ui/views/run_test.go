@@ -1,4 +1,4 @@
-package run
+package views
 
 import (
 	"testing"
@@ -8,22 +8,27 @@ import (
 )
 
 func TestRenderRunColumn(t *testing.T) {
-	props := ColumnProps{
+	props := RunColumnProps{
 		Title: "Runs",
-		Runs: []Run{
+		Runs: []RunView{
 			{
 				DisplayName:  "Run A",
 				ID:           "run-a",
 				StateLabel:   "ready",
 				StateClass:   "status-badge--ready",
 				WorkflowName: "Alpha",
-				Steps: []Step{
+				Steps: []RunStep{
 					{Name: "first", Status: "pending", StatusClass: "status-badge--pending"},
 				},
 			},
 		},
 	}
 
-	html := testutil.Render(t, Column(props))
-	golden.Assert(t, html, "column.golden")
+	html := testutil.Render(t, RunColumn(props))
+	golden.Assert(t, html, "run_column.golden")
+}
+
+func TestRenderRunModal(t *testing.T) {
+	html := testutil.Render(t, RunModal(RunModalProps{}))
+	golden.Assert(t, html, "run_modal.golden")
 }

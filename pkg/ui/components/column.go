@@ -1,41 +1,39 @@
-package column
+package components
 
 import (
 	"strings"
 
 	g "maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
-
-	"composer/internal/ui/components/button"
 )
 
-// Variant controls the background styling of the column surface.
-type Variant string
+// ColumnVariant controls the background styling of the column surface.
+type ColumnVariant string
 
 const (
-	VariantDefault Variant = ""
-	VariantMuted   Variant = "panel--muted"
+	ColumnVariantDefault ColumnVariant = ""
+	ColumnVariantMuted   ColumnVariant = "panel--muted"
 )
 
-// Props configures a dashboard column with header metadata and list contents.
-type Props struct {
+// ColumnProps configures a dashboard column with header metadata and list contents.
+type ColumnProps struct {
 	Title        string
-	Actions      []button.Props
-	Variant      Variant
+	Actions      []ButtonProps
+	Variant      ColumnVariant
 	ListClass    string
 	EmptyMessage string
-	Items        []Item
+	Items        []ColumnItem
 }
 
-// Item represents a single element rendered within the column list.
-type Item struct {
+// ColumnItem represents a single element rendered within the column list.
+type ColumnItem struct {
 	Class          string
 	DisableWrapper bool
 	Nodes          []g.Node
 }
 
-// Section renders the composed column with header + body list.
-func Section(p Props) g.Node {
+// ColumnSection renders the composed column with header + body list.
+func ColumnSection(p ColumnProps) g.Node {
 	className := "panel"
 	if extra := strings.TrimSpace(string(p.Variant)); extra != "" {
 		className += " " + extra
@@ -43,16 +41,16 @@ func Section(p Props) g.Node {
 
 	return html.Section(
 		html.Class(className),
-		renderHeader(p.Title, p.Actions),
-		renderList(p.ListClass, p.EmptyMessage, p.Items),
+		renderColumnHeader(p.Title, p.Actions),
+		renderColumnList(p.ListClass, p.EmptyMessage, p.Items),
 	)
 }
 
-func renderHeader(title string, actions []button.Props) g.Node {
+func renderColumnHeader(title string, actions []ButtonProps) g.Node {
 	actionNodes := make([]g.Node, 0, len(actions))
 	for _, action := range actions {
 		actionCopy := action
-		actionNodes = append(actionNodes, button.Button(actionCopy))
+		actionNodes = append(actionNodes, Button(actionCopy))
 	}
 
 	return html.Header(
@@ -65,7 +63,7 @@ func renderHeader(title string, actions []button.Props) g.Node {
 	)
 }
 
-func renderList(listClass, emptyMessage string, items []Item) g.Node {
+func renderColumnList(listClass, emptyMessage string, items []ColumnItem) g.Node {
 	if len(items) == 0 {
 		message := strings.TrimSpace(emptyMessage)
 		if message == "" {
@@ -81,7 +79,7 @@ func renderList(listClass, emptyMessage string, items []Item) g.Node {
 
 	rendered := make([]g.Node, 0, len(items))
 	for _, item := range items {
-		rendered = append(rendered, renderListItem(item))
+		rendered = append(rendered, renderColumnListItem(item))
 	}
 
 	return html.Ul(
@@ -90,7 +88,7 @@ func renderList(listClass, emptyMessage string, items []Item) g.Node {
 	)
 }
 
-func renderListItem(item Item) g.Node {
+func renderColumnListItem(item ColumnItem) g.Node {
 	if item.DisableWrapper {
 		if item.Nodes != nil {
 			return g.Group(item.Nodes)
@@ -106,8 +104,8 @@ func renderListItem(item Item) g.Node {
 	return html.Li(attrs...)
 }
 
-// InfoRow renders a standard label/value pair used across column bodies.
-func InfoRow(label, value string) g.Node {
+// ColumnInfoRow renders a standard label/value pair used across column bodies.
+func ColumnInfoRow(label, value string) g.Node {
 	return html.P(
 		html.Strong(g.Text(label+" ")),
 		g.Text(value),

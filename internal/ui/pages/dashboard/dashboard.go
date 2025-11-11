@@ -7,21 +7,18 @@ import (
 	g "maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 
-	"composer/internal/ui/components/button"
-	"composer/internal/ui/components/run"
-	sidebar "composer/internal/ui/components/sidebar"
-	"composer/internal/ui/components/waiting"
-	"composer/internal/ui/components/workflow"
+	"composer/pkg/ui/components"
+	"composer/internal/ui/views"
 )
 
 // Props aggregates the components required to render the dashboard page.
 type Props struct {
-	Sidebar        sidebar.Props
-	WorkflowColumn workflow.ColumnProps
-	WorkflowModal  workflow.ModalProps
-	RunColumn      run.ColumnProps
-	RunModal       run.ModalProps
-	TaskColumn     waiting.ColumnProps
+	Sidebar        components.SidebarProps
+	WorkflowColumn views.WorkflowColumnProps
+	WorkflowModal  views.WorkflowModalProps
+	RunColumn      views.RunColumnProps
+	RunModal       views.RunModalProps
+	TaskColumn     views.WaitingColumnProps
 }
 
 // Page returns the root gomponent for the dashboard.
@@ -51,15 +48,15 @@ func HTML(props Props) (string, error) {
 
 // DefaultWorkflowModal returns the default modal configuration shared by the
 // dashboard builder.
-func DefaultWorkflowModal() workflow.ModalProps {
-	return workflow.ModalProps{
+func DefaultWorkflowModal() views.WorkflowModalProps {
+	return views.WorkflowModalProps{
 		AddStepButton: buttonProps(),
 	}
 }
 
 // DefaultRunModal returns an empty run modal props value for convenience.
-func DefaultRunModal() run.ModalProps {
-	return run.ModalProps{}
+func DefaultRunModal() views.RunModalProps {
+	return views.RunModalProps{}
 }
 
 func head() g.Node {
@@ -83,7 +80,7 @@ func body(p Props) g.Node {
 			html.Class("ui-shell"),
 			html.Aside(
 				html.Class("ui-shell__sidebar"),
-				sidebar.Sidebar(p.Sidebar),
+				components.Sidebar(p.Sidebar),
 			),
 			html.Main(
 				html.Class("ui-shell__main"),
@@ -92,12 +89,12 @@ func body(p Props) g.Node {
 					html.H1(g.Text("Workflow Dashboard")),
 					html.Div(
 						html.Class("panel-grid"),
-						workflow.Column(p.WorkflowColumn),
-						run.Column(p.RunColumn),
-						waiting.Column(p.TaskColumn),
+						views.WorkflowColumn(p.WorkflowColumn),
+						views.RunColumn(p.RunColumn),
+						views.WaitingColumn(p.TaskColumn),
 					),
-					run.Modal(p.RunModal),
-					workflow.Modal(p.WorkflowModal),
+					views.RunModal(p.RunModal),
+					views.WorkflowModal(p.WorkflowModal),
 				),
 			),
 		),
@@ -108,8 +105,8 @@ func body(p Props) g.Node {
 	)
 }
 
-func buttonProps() button.Props {
-	return button.Props{
+func buttonProps() components.ButtonProps {
+	return components.ButtonProps{
 		ID:       "add-workflow-step",
 		Class:    "button--outline button--sm",
 		Label:    "Add Step",

@@ -1,57 +1,56 @@
-package waiting
+package views
 
 import (
 	g "maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 
-	"composer/internal/ui/components/button"
-	appcolumn "composer/internal/ui/components/column"
+	"composer/pkg/ui/components"
 )
 
-// Task represents a single waiting task awaiting user interaction.
-type Task struct {
+// WaitingTask represents a single waiting task awaiting user interaction.
+type WaitingTask struct {
 	Name        string
 	Description string
 	Prompt      string
 }
 
-// Group aggregates pending human tasks for a specific run.
-type Group struct {
+// WaitingGroup aggregates pending human tasks for a specific run.
+type WaitingGroup struct {
 	RunID          string
 	RunDisplayName string
 	WorkflowName   string
 	TaskCount      int
-	Tasks          []Task
+	Tasks          []WaitingTask
 }
 
-// ColumnProps represents the waiting-task column on the dashboard.
-type ColumnProps struct {
+// WaitingColumnProps represents the waiting-task column on the dashboard.
+type WaitingColumnProps struct {
 	Title   string
-	Actions []button.Props
-	Groups  []Group
+	Actions []components.ButtonProps
+	Groups  []WaitingGroup
 }
 
-// Column renders the waiting tasks column, including empty states.
-func Column(p ColumnProps) g.Node {
-	return appcolumn.Section(appcolumn.Props{
+// WaitingColumn renders the waiting tasks column, including empty states.
+func WaitingColumn(p WaitingColumnProps) g.Node {
+	return components.ColumnSection(components.ColumnProps{
 		Title:        p.Title,
 		Actions:      p.Actions,
-		Variant:      appcolumn.VariantMuted,
+		Variant:      components.ColumnVariantMuted,
 		ListClass:    "waiting-list",
 		EmptyMessage: "No waiting tasks.",
 		Items:        waitingItems(p.Groups),
 	})
 }
 
-func waitingItems(groups []Group) []appcolumn.Item {
+func waitingItems(groups []WaitingGroup) []components.ColumnItem {
 	if len(groups) == 0 {
 		return nil
 	}
 
-	items := make([]appcolumn.Item, 0, len(groups))
-	for _, group := range groups {
-		group := group
-		items = append(items, appcolumn.Item{
+	items := make([]components.ColumnItem, 0, len(groups))
+	for _, current := range groups {
+		group := current
+		items = append(items, components.ColumnItem{
 			DisableWrapper: true,
 			Nodes: []g.Node{html.Li(
 				html.Div(
@@ -73,7 +72,7 @@ func waitingItems(groups []Group) []appcolumn.Item {
 	return items
 }
 
-func waitingTasks(tasks []Task) []g.Node {
+func waitingTasks(tasks []WaitingTask) []g.Node {
 	nodes := make([]g.Node, 0, len(tasks))
 	for _, task := range tasks {
 		nodes = append(nodes, html.Li(

@@ -1,4 +1,4 @@
-package statusbadge
+package components
 
 import (
 	"strings"
@@ -7,14 +7,14 @@ import (
 	"maragu.dev/gomponents/html"
 )
 
-// Props defines the label and modifier classes for a status badge.
-type Props struct {
+// StatusBadgeProps defines the label and modifier classes for a status badge.
+type StatusBadgeProps struct {
 	Label   string
 	Variant string
 }
 
-// Badge renders the status badge inline element.
-func Badge(p Props) g.Node {
+// StatusBadge renders the status badge inline element.
+func StatusBadge(p StatusBadgeProps) g.Node {
 	className := "status-badge"
 	if extra := strings.TrimSpace(p.Variant); extra != "" {
 		className += " " + extra

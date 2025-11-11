@@ -1,19 +1,19 @@
-package card
+package components
 
 import (
 	g "maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
 
-// Props describes a collapsible card with optional summary items and body.
-type Props struct {
+// CardProps describes a collapsible card with optional summary items and body.
+type CardProps struct {
 	Title        string
 	SummaryItems []g.Node
 	Body         g.Node
 }
 
 // Card renders the collapsible card structure used throughout the dashboard.
-func Card(p Props) g.Node {
+func Card(p CardProps) g.Node {
 	summary := []g.Node{
 		html.Span(
 			html.Class("collapsible__title"),
