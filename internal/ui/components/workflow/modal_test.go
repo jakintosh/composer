@@ -1,4 +1,4 @@
-package modal
+package workflow
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestRenderWorkflowModal(t *testing.T) {
-	props := Props{AddStepButton: button.Props{Label: "Add Step"}}
+	props := ModalProps{AddStepButton: button.Props{Label: "Add Step"}}
 
 	html := testutil.Render(t, Modal(props))
 	golden.Assert(t, html, "modal.golden")

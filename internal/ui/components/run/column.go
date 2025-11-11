@@ -1,4 +1,4 @@
-package column
+package run
 
 import (
 	"fmt"
@@ -9,9 +9,8 @@ import (
 
 	"composer/internal/ui/components/button"
 	"composer/internal/ui/components/card"
-	"composer/internal/ui/components/columnheader"
+	appcolumn "composer/internal/ui/components/column"
 	"composer/internal/ui/components/datalist"
-	"composer/internal/ui/components/panel"
 	"composer/internal/ui/components/statusbadge"
 )
 
@@ -32,37 +31,39 @@ type Run struct {
 	Steps        []Step
 }
 
-// Props describes the runs column rendered on the dashboard.
-type Props struct {
-	Header columnheader.Props
-	Runs   []Run
+// ColumnProps describes the runs column rendered on the dashboard.
+type ColumnProps struct {
+	Title   string
+	Actions []button.Props
+	Runs    []Run
 }
 
 // Column renders the runs column including an empty state.
-func Column(p Props) g.Node {
-	return panel.Section(panel.SectionProps{
-		Header: p.Header,
-		Body: panel.List(panel.ListProps{
-			Items:        runItems(p.Runs),
-			EmptyMessage: "No runs found.",
-		}),
+func Column(p ColumnProps) g.Node {
+	return appcolumn.Section(appcolumn.Props{
+		Title:        p.Title,
+		Actions:      p.Actions,
+		EmptyMessage: "No runs found.",
+		Items:        runItems(p.Runs),
 	})
 }
 
-func runItems(runs []Run) []panel.ListItemProps {
+func runItems(runs []Run) []appcolumn.Item {
 	if len(runs) == 0 {
 		return nil
 	}
-	items := make([]panel.ListItemProps, 0, len(runs))
+	items := make([]appcolumn.Item, 0, len(runs))
 	for _, run := range runs {
 		current := run
-		items = append(items, panel.ListItemProps{
+		items = append(items, appcolumn.Item{
 			DisableWrapper: true,
-			Content: card.Card(card.Props{
-				Title:        current.DisplayName,
-				SummaryItems: runSummaryItems(current),
-				Body:         runBody(current),
-			}),
+			Nodes: []g.Node{
+				card.Card(card.Props{
+					Title:        current.DisplayName,
+					SummaryItems: runSummaryItems(current),
+					Body:         runBody(current),
+				}),
+			},
 		})
 	}
 	return items
@@ -93,8 +94,8 @@ func runSummaryItems(run Run) []g.Node {
 
 func runBody(run Run) g.Node {
 	rows := []g.Node{
-		infoRow("Run ID:", run.ID),
-		infoRow("Workflow:", run.WorkflowName),
+		appcolumn.InfoRow("Run ID:", run.ID),
+		appcolumn.InfoRow("Workflow:", run.WorkflowName),
 	}
 	if steps := runSteps(run.Steps); steps != nil {
 		rows = append(rows, html.H3(g.Text("Steps")), steps)
@@ -117,11 +118,4 @@ func runSteps(steps []Step) g.Node {
 		})
 	}
 	return datalist.List(datalist.Props{Items: items})
-}
-
-func infoRow(label, value string) g.Node {
-	return html.P(
-		html.Strong(g.Text(label+" ")),
-		g.Text(value),
-	)
 }

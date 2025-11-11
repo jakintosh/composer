@@ -1,21 +1,18 @@
-package column
+package workflow
 
 import (
 	"testing"
 
 	"composer/internal/ui/components/button"
-	"composer/internal/ui/components/columnheader"
 	"composer/internal/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 
 func TestRenderWorkflowColumn(t *testing.T) {
-	props := Props{
-		Header: columnheader.Props{
-			Title: "Workflows",
-			Actions: []button.Props{
-				{Label: "Add", Class: "button--accent"},
-			},
+	props := ColumnProps{
+		Title: "Workflows",
+		Actions: []button.Props{
+			{Label: "Add", Class: "button--accent"},
 		},
 		Workflows: []Workflow{
 			{

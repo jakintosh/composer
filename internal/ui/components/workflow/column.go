@@ -1,4 +1,4 @@
-package column
+package workflow
 
 import (
 	"fmt"
@@ -9,9 +9,8 @@ import (
 
 	"composer/internal/ui/components/button"
 	"composer/internal/ui/components/card"
-	"composer/internal/ui/components/columnheader"
+	appcolumn "composer/internal/ui/components/column"
 	"composer/internal/ui/components/datalist"
-	"composer/internal/ui/components/panel"
 )
 
 // Workflow represents a single workflow card in the column.
@@ -23,37 +22,39 @@ type Workflow struct {
 	StepNames   []string
 }
 
-// Props describes the workflow column on the dashboard.
-type Props struct {
-	Header    columnheader.Props
+// ColumnProps describes the workflow column on the dashboard.
+type ColumnProps struct {
+	Title     string
+	Actions   []button.Props
 	Workflows []Workflow
 }
 
 // Column renders the workflow column, including empty states.
-func Column(p Props) g.Node {
-	return panel.Section(panel.SectionProps{
-		Header: p.Header,
-		Body: panel.List(panel.ListProps{
-			Items:        workflowItems(p.Workflows),
-			EmptyMessage: "No workflows available.",
-		}),
+func Column(p ColumnProps) g.Node {
+	return appcolumn.Section(appcolumn.Props{
+		Title:        p.Title,
+		Actions:      p.Actions,
+		EmptyMessage: "No workflows available.",
+		Items:        workflowItems(p.Workflows),
 	})
 }
 
-func workflowItems(workflows []Workflow) []panel.ListItemProps {
+func workflowItems(workflows []Workflow) []appcolumn.Item {
 	if len(workflows) == 0 {
 		return nil
 	}
-	items := make([]panel.ListItemProps, 0, len(workflows))
+	items := make([]appcolumn.Item, 0, len(workflows))
 	for _, wf := range workflows {
 		workflow := wf
-		items = append(items, panel.ListItemProps{
+		items = append(items, appcolumn.Item{
 			DisableWrapper: true,
-			Content: card.Card(card.Props{
-				Title:        workflow.DisplayName,
-				SummaryItems: workflowSummaryItems(workflow),
-				Body:         workflowBody(workflow),
-			}),
+			Nodes: []g.Node{
+				card.Card(card.Props{
+					Title:        workflow.DisplayName,
+					SummaryItems: workflowSummaryItems(workflow),
+					Body:         workflowBody(workflow),
+				}),
+			},
 		})
 	}
 	return items
@@ -83,26 +84,19 @@ func workflowSummaryItems(w Workflow) []g.Node {
 
 func workflowBody(w Workflow) g.Node {
 	rows := []g.Node{
-		infoRow("ID:", w.ID),
-		infoRow("Display Name:", w.DisplayName),
+		appcolumn.InfoRow("ID:", w.ID),
+		appcolumn.InfoRow("Display Name:", w.DisplayName),
 	}
 	if strings.TrimSpace(w.Description) != "" {
-		rows = append(rows, infoRow("Description:", w.Description))
+		rows = append(rows, appcolumn.InfoRow("Description:", w.Description))
 	}
 	if strings.TrimSpace(w.Message) != "" {
-		rows = append(rows, infoRow("Message:", w.Message))
+		rows = append(rows, appcolumn.InfoRow("Message:", w.Message))
 	}
 	if steps := workflowSteps(w.StepNames); steps != nil {
 		rows = append(rows, html.H3(g.Text("Steps")), steps)
 	}
 	return g.Group(rows)
-}
-
-func infoRow(label, value string) g.Node {
-	return html.P(
-		html.Strong(g.Text(label+" ")),
-		g.Text(value),
-	)
 }
 
 func workflowSteps(stepNames []string) g.Node {

@@ -1,4 +1,4 @@
-package modal
+package run
 
 import (
 	g "maragu.dev/gomponents"
@@ -8,11 +8,11 @@ import (
 	"composer/internal/ui/components/modal"
 )
 
-// Props contains the data required to render the run modal.
-type Props struct{}
+// ModalProps contains the data required to render the run modal.
+type ModalProps struct{}
 
 // Modal renders the run modal shell and form.
-func Modal(Props) g.Node {
+func Modal(ModalProps) g.Node {
 	return modal.Shell(modal.Props{
 		ID:         "run-modal",
 		Title:      "Start Run",

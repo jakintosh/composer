@@ -1,4 +1,4 @@
-package modal
+package workflow
 
 import (
 	g "maragu.dev/gomponents"
@@ -8,13 +8,13 @@ import (
 	"composer/internal/ui/components/modal"
 )
 
-// Props holds the controls displayed in the workflow creation modal.
-type Props struct {
+// ModalProps holds the controls displayed in the workflow creation modal.
+type ModalProps struct {
 	AddStepButton button.Props
 }
 
 // Modal renders the workflow modal shell, form, and step template.
-func Modal(p Props) g.Node {
+func Modal(p ModalProps) g.Node {
 	return g.Group([]g.Node{
 		modal.Shell(modal.Props{
 			ID:         "workflow-modal",
@@ -26,7 +26,7 @@ func Modal(p Props) g.Node {
 	})
 }
 
-func workflowForm(p Props) g.Node {
+func workflowForm(p ModalProps) g.Node {
 	return g.Group([]g.Node{
 		html.Div(
 			html.ID("workflow-form-error"),

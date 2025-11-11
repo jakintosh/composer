@@ -4,8 +4,8 @@ import (
 	g "maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 
-	"composer/internal/ui/components/columnheader"
-	"composer/internal/ui/components/panel"
+	"composer/internal/ui/components/button"
+	appcolumn "composer/internal/ui/components/column"
 )
 
 // Task represents a single waiting task awaiting user interaction.
@@ -26,46 +26,51 @@ type Group struct {
 
 // Props represents the waiting-task column on the dashboard.
 type Props struct {
-	Header columnheader.Props
-	Groups []Group
+	Title   string
+	Actions []button.Props
+	Groups  []Group
 }
 
 // Column renders the waiting tasks column, including empty states.
 func Column(p Props) g.Node {
-	return panel.Section(panel.SectionProps{
-		Header:  p.Header,
-		Variant: panel.VariantMuted,
-		Body:    waitingGroups(p.Groups),
+	return appcolumn.Section(appcolumn.Props{
+		Title:        p.Title,
+		Actions:      p.Actions,
+		Variant:      appcolumn.VariantMuted,
+		ListClass:    "waiting-list",
+		EmptyMessage: "No waiting tasks.",
+		Items:        waitingItems(p.Groups),
 	})
 }
 
-func waitingGroups(groups []Group) g.Node {
+func waitingItems(groups []Group) []appcolumn.Item {
 	if len(groups) == 0 {
-		return html.P(g.Text("No waiting tasks."))
+		return nil
 	}
 
-	items := make([]g.Node, 0, len(groups))
+	items := make([]appcolumn.Item, 0, len(groups))
 	for _, group := range groups {
-		items = append(items, html.Li(
-			html.Div(
-				html.Class("waiting-group__header"),
-				html.Span(g.Text(group.RunDisplayName)),
-				html.Span(
-					html.Class("waiting-group__divider"),
-					html.Aria("hidden", "true"),
+		group := group
+		items = append(items, appcolumn.Item{
+			DisableWrapper: true,
+			Nodes: []g.Node{html.Li(
+				html.Div(
+					html.Class("waiting-group__header"),
+					html.Span(g.Text(group.RunDisplayName)),
+					html.Span(
+						html.Class("waiting-group__divider"),
+						html.Aria("hidden", "true"),
+					),
 				),
-			),
-			html.Ul(
-				html.Class("waiting-group__tasks"),
-				g.Group(waitingTasks(group.Tasks)),
-			),
-		))
+				html.Ul(
+					html.Class("waiting-group__tasks"),
+					g.Group(waitingTasks(group.Tasks)),
+				),
+			)},
+		})
 	}
 
-	return html.Ul(
-		html.Class("panel__list waiting-list"),
-		g.Group(items),
-	)
+	return items
 }
 
 func waitingTasks(tasks []Task) []g.Node {

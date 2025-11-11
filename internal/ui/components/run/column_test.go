@@ -1,16 +1,15 @@
-package column
+package run
 
 import (
 	"testing"
 
-	"composer/internal/ui/components/columnheader"
 	"composer/internal/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 
 func TestRenderRunColumn(t *testing.T) {
-	props := Props{
-		Header: columnheader.Props{Title: "Runs"},
+	props := ColumnProps{
+		Title: "Runs",
 		Runs: []Run{
 			{
 				DisplayName:  "Run A",

@@ -3,14 +3,13 @@ package column
 import (
 	"testing"
 
-	"composer/internal/ui/components/columnheader"
 	"composer/internal/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 
 func TestRenderWaitingColumn(t *testing.T) {
 	props := Props{
-		Header: columnheader.Props{Title: "Tasks"},
+		Title: "Tasks",
 		Groups: []Group{
 			{
 				RunID:          "run-a",

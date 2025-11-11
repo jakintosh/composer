@@ -8,21 +8,19 @@ import (
 	"maragu.dev/gomponents/html"
 
 	"composer/internal/ui/components/button"
-	runcolumn "composer/internal/ui/components/run_column"
-	runmodal "composer/internal/ui/components/run_modal"
+	runcomponent "composer/internal/ui/components/run"
 	sidebar "composer/internal/ui/components/sidebar"
 	waitingcolumn "composer/internal/ui/components/waiting_column"
-	workflowcolumn "composer/internal/ui/components/workflow_column"
-	workflowmodal "composer/internal/ui/components/workflow_modal"
+	workflowcomponent "composer/internal/ui/components/workflow"
 )
 
 // Props aggregates the components required to render the dashboard page.
 type Props struct {
 	Sidebar        sidebar.Props
-	WorkflowColumn workflowcolumn.Props
-	WorkflowModal  workflowmodal.Props
-	RunColumn      runcolumn.Props
-	RunModal       runmodal.Props
+	WorkflowColumn workflowcomponent.ColumnProps
+	WorkflowModal  workflowcomponent.ModalProps
+	RunColumn      runcomponent.ColumnProps
+	RunModal       runcomponent.ModalProps
 	TaskColumn     waitingcolumn.Props
 }
 
@@ -53,15 +51,15 @@ func HTML(props Props) (string, error) {
 
 // DefaultWorkflowModal returns the default modal configuration shared by the
 // dashboard builder.
-func DefaultWorkflowModal() workflowmodal.Props {
-	return workflowmodal.Props{
+func DefaultWorkflowModal() workflowcomponent.ModalProps {
+	return workflowcomponent.ModalProps{
 		AddStepButton: buttonProps(),
 	}
 }
 
 // DefaultRunModal returns an empty run modal props value for convenience.
-func DefaultRunModal() runmodal.Props {
-	return runmodal.Props{}
+func DefaultRunModal() runcomponent.ModalProps {
+	return runcomponent.ModalProps{}
 }
 
 func head() g.Node {
@@ -94,12 +92,12 @@ func body(p Props) g.Node {
 					html.H1(g.Text("Workflow Dashboard")),
 					html.Div(
 						html.Class("panel-grid"),
-						workflowcolumn.Column(p.WorkflowColumn),
-						runcolumn.Column(p.RunColumn),
+						workflowcomponent.Column(p.WorkflowColumn),
+						runcomponent.Column(p.RunColumn),
 						waitingcolumn.Column(p.TaskColumn),
 					),
-					runmodal.Modal(p.RunModal),
-					workflowmodal.Modal(p.WorkflowModal),
+					runcomponent.Modal(p.RunModal),
+					workflowcomponent.Modal(p.WorkflowModal),
 				),
 			),
 		),

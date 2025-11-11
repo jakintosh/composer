@@ -1,4 +1,4 @@
-package modal
+package run
 
 import (
 	"testing"
@@ -8,6 +8,6 @@ import (
 )
 
 func TestRenderRunModal(t *testing.T) {
-	html := testutil.Render(t, Modal(Props{}))
+	html := testutil.Render(t, Modal(ModalProps{}))
 	golden.Assert(t, html, "modal.golden")
 }
