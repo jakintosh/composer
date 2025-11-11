@@ -9,8 +9,25 @@ import (
 
 func TestBuildDashboardModel(t *testing.T) {
 	workflows := []workflow.Workflow{
-		{DisplayName: "Beta Flow", ID: "wf-beta", Description: "B", Message: "Beta", Steps: []workflow.Step{{Name: " beta-step "}}},
-		{DisplayName: "Alpha Flow", ID: "wf-alpha", Description: "A", Message: "Alpha", Steps: []workflow.Step{{Name: "first"}, {Name: "Second"}}},
+		{
+			DisplayName: "Beta Flow",
+			ID:          "wf-beta",
+			Description: "B",
+			Message:     "Beta",
+			Steps: []workflow.Step{
+				{Name: " beta-step "},
+			},
+		},
+		{
+			DisplayName: "Alpha Flow",
+			ID:          "wf-alpha",
+			Description: "A",
+			Message:     "Alpha",
+			Steps: []workflow.Step{
+				{Name: "first"},
+				{Name: "Second"},
+			},
+		},
 	}
 
 	runs := []workflow.RunState{
@@ -35,8 +52,15 @@ func TestBuildDashboardModel(t *testing.T) {
 
 	waiting := map[string][]orchestrator.WaitingTask{
 		"run-a": {
-			{Name: "Review", Description: "Check", Prompt: "Do it"},
-			{Name: "Approve", Description: "OK"},
+			{
+				Name:        "Review",
+				Description: "Check",
+				Prompt:      "Do it",
+			},
+			{
+				Name:        "Approve",
+				Description: "OK",
+			},
 		},
 	}
 
