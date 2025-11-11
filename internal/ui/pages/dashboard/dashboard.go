@@ -8,20 +8,20 @@ import (
 	"maragu.dev/gomponents/html"
 
 	"composer/internal/ui/components/button"
-	runcomponent "composer/internal/ui/components/run"
+	"composer/internal/ui/components/run"
 	sidebar "composer/internal/ui/components/sidebar"
-	waitingcolumn "composer/internal/ui/components/waiting_column"
-	workflowcomponent "composer/internal/ui/components/workflow"
+	"composer/internal/ui/components/waiting"
+	"composer/internal/ui/components/workflow"
 )
 
 // Props aggregates the components required to render the dashboard page.
 type Props struct {
 	Sidebar        sidebar.Props
-	WorkflowColumn workflowcomponent.ColumnProps
-	WorkflowModal  workflowcomponent.ModalProps
-	RunColumn      runcomponent.ColumnProps
-	RunModal       runcomponent.ModalProps
-	TaskColumn     waitingcolumn.Props
+	WorkflowColumn workflow.ColumnProps
+	WorkflowModal  workflow.ModalProps
+	RunColumn      run.ColumnProps
+	RunModal       run.ModalProps
+	TaskColumn     waiting.ColumnProps
 }
 
 // Page returns the root gomponent for the dashboard.
@@ -51,15 +51,15 @@ func HTML(props Props) (string, error) {
 
 // DefaultWorkflowModal returns the default modal configuration shared by the
 // dashboard builder.
-func DefaultWorkflowModal() workflowcomponent.ModalProps {
-	return workflowcomponent.ModalProps{
+func DefaultWorkflowModal() workflow.ModalProps {
+	return workflow.ModalProps{
 		AddStepButton: buttonProps(),
 	}
 }
 
 // DefaultRunModal returns an empty run modal props value for convenience.
-func DefaultRunModal() runcomponent.ModalProps {
-	return runcomponent.ModalProps{}
+func DefaultRunModal() run.ModalProps {
+	return run.ModalProps{}
 }
 
 func head() g.Node {
@@ -92,12 +92,12 @@ func body(p Props) g.Node {
 					html.H1(g.Text("Workflow Dashboard")),
 					html.Div(
 						html.Class("panel-grid"),
-						workflowcomponent.Column(p.WorkflowColumn),
-						runcomponent.Column(p.RunColumn),
-						waitingcolumn.Column(p.TaskColumn),
+						workflow.Column(p.WorkflowColumn),
+						run.Column(p.RunColumn),
+						waiting.Column(p.TaskColumn),
 					),
-					runcomponent.Modal(p.RunModal),
-					workflowcomponent.Modal(p.WorkflowModal),
+					run.Modal(p.RunModal),
+					workflow.Modal(p.WorkflowModal),
 				),
 			),
 		),

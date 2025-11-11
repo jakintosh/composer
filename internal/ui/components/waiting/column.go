@@ -1,4 +1,4 @@
-package column
+package waiting
 
 import (
 	g "maragu.dev/gomponents"
@@ -24,15 +24,15 @@ type Group struct {
 	Tasks          []Task
 }
 
-// Props represents the waiting-task column on the dashboard.
-type Props struct {
+// ColumnProps represents the waiting-task column on the dashboard.
+type ColumnProps struct {
 	Title   string
 	Actions []button.Props
 	Groups  []Group
 }
 
 // Column renders the waiting tasks column, including empty states.
-func Column(p Props) g.Node {
+func Column(p ColumnProps) g.Node {
 	return appcolumn.Section(appcolumn.Props{
 		Title:        p.Title,
 		Actions:      p.Actions,

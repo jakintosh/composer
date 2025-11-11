@@ -1,4 +1,4 @@
-package column
+package waiting
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestRenderWaitingColumn(t *testing.T) {
-	props := Props{
+	props := ColumnProps{
 		Title: "Tasks",
 		Groups: []Group{
 			{

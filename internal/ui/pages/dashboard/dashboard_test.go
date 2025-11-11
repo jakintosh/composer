@@ -7,7 +7,7 @@ import (
 	"composer/internal/ui/components/button"
 	runcomponent "composer/internal/ui/components/run"
 	sidebar "composer/internal/ui/components/sidebar"
-	waitingcolumn "composer/internal/ui/components/waiting_column"
+	waitingcomponent "composer/internal/ui/components/waiting"
 	workflowcomponent "composer/internal/ui/components/workflow"
 	"composer/internal/ui/testutil"
 	"gotest.tools/v3/golden"
@@ -27,7 +27,7 @@ func TestRenderDashboardPage(t *testing.T) {
 		},
 		RunColumn:  runcomponent.ColumnProps{Title: "Runs"},
 		RunModal:   DefaultRunModal(),
-		TaskColumn: waitingcolumn.Props{Title: "Tasks"},
+		TaskColumn: waitingcomponent.ColumnProps{Title: "Tasks"},
 	}
 
 	html := testutil.Render(t, Page(props))

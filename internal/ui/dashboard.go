@@ -8,7 +8,7 @@ import (
 	"composer/internal/ui/components/button"
 	runcomponent "composer/internal/ui/components/run"
 	sidebar "composer/internal/ui/components/sidebar"
-	waitingcolumn "composer/internal/ui/components/waiting_column"
+	waitingcomponent "composer/internal/ui/components/waiting"
 	workflowcomponent "composer/internal/ui/components/workflow"
 	dashboardpage "composer/internal/ui/pages/dashboard"
 	"composer/internal/workflow"
@@ -64,7 +64,7 @@ func buildDashboardModel(
 		return runVMs[i].DisplayName < runVMs[j].DisplayName
 	})
 
-	taskGroupVMs := make([]waitingcolumn.Group, 0, len(waitingTasks))
+	taskGroupVMs := make([]waitingcomponent.Group, 0, len(waitingTasks))
 	for _, runState := range runs {
 		runID := strings.TrimSpace(runState.ID)
 		displayName := strings.TrimSpace(runState.Name)
@@ -77,9 +77,9 @@ func buildDashboardModel(
 			continue
 		}
 
-		taskVMs := make([]waitingcolumn.Task, 0, len(tasks))
+		taskVMs := make([]waitingcomponent.Task, 0, len(tasks))
 		for _, task := range tasks {
-			taskVMs = append(taskVMs, waitingcolumn.Task{
+			taskVMs = append(taskVMs, waitingcomponent.Task{
 				Name:        strings.TrimSpace(task.Name),
 				Description: strings.TrimSpace(task.Description),
 				Prompt:      strings.TrimSpace(task.Prompt),
@@ -90,7 +90,7 @@ func buildDashboardModel(
 			return taskVMs[i].Name < taskVMs[j].Name
 		})
 
-		taskGroupVMs = append(taskGroupVMs, waitingcolumn.Group{
+		taskGroupVMs = append(taskGroupVMs, waitingcomponent.Group{
 			RunID:          runID,
 			RunDisplayName: displayName,
 			WorkflowName:   strings.TrimSpace(runState.WorkflowName),
@@ -133,7 +133,7 @@ func buildDashboardModel(
 			Runs:  runVMs,
 		},
 		RunModal: dashboardpage.DefaultRunModal(),
-		TaskColumn: waitingcolumn.Props{
+		TaskColumn: waitingcomponent.ColumnProps{
 			Title:  "Tasks",
 			Groups: taskGroupVMs,
 		},
