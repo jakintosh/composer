@@ -3,7 +3,7 @@ package views
 import (
 	"testing"
 
-	"composer/internal/ui/testutil"
+	"composer/pkg/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 

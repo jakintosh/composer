@@ -1,18 +1,15 @@
-package dashboard
+package pages
 
 import (
-	"bytes"
-	"io"
+	"composer/internal/ui/views"
+	"composer/pkg/ui/components"
 
 	g "maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
-
-	"composer/pkg/ui/components"
-	"composer/internal/ui/views"
 )
 
-// Props aggregates the components required to render the dashboard page.
-type Props struct {
+// DashboardProps aggregates the components required to render the dashboard page.
+type DashboardProps struct {
 	Sidebar        components.SidebarProps
 	WorkflowColumn views.WorkflowColumnProps
 	WorkflowModal  views.WorkflowModalProps
@@ -21,8 +18,8 @@ type Props struct {
 	TaskColumn     views.WaitingColumnProps
 }
 
-// Page returns the root gomponent for the dashboard.
-func Page(p Props) g.Node {
+// Dashboard returns the root gomponent for the dashboard.
+func Dashboard(p DashboardProps) g.Node {
 	return html.Doctype(
 		html.HTML(
 			html.Lang("en"),
@@ -30,20 +27,6 @@ func Page(p Props) g.Node {
 			body(p),
 		),
 	)
-}
-
-// RenderPage writes the rendered dashboard to the supplied writer.
-func RenderPage(w io.Writer, props Props) error {
-	return Page(props).Render(w)
-}
-
-// HTML renders the dashboard and returns the HTML fragment.
-func HTML(props Props) (string, error) {
-	var buf bytes.Buffer
-	if err := RenderPage(&buf, props); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
 }
 
 // DefaultWorkflowModal returns the default modal configuration shared by the
@@ -74,7 +57,7 @@ func head() g.Node {
 	)
 }
 
-func body(p Props) g.Node {
+func body(p DashboardProps) g.Node {
 	return html.Body(
 		html.Div(
 			html.Class("ui-shell"),

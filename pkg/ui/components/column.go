@@ -41,12 +41,12 @@ func ColumnSection(p ColumnProps) g.Node {
 
 	return html.Section(
 		html.Class(className),
-		renderColumnHeader(p.Title, p.Actions),
-		renderColumnList(p.ListClass, p.EmptyMessage, p.Items),
+		ColumnHeader(p.Title, p.Actions),
+		ColumnList(p.ListClass, p.EmptyMessage, p.Items),
 	)
 }
 
-func renderColumnHeader(title string, actions []ButtonProps) g.Node {
+func ColumnHeader(title string, actions []ButtonProps) g.Node {
 	actionNodes := make([]g.Node, 0, len(actions))
 	for _, action := range actions {
 		actionCopy := action
@@ -63,7 +63,7 @@ func renderColumnHeader(title string, actions []ButtonProps) g.Node {
 	)
 }
 
-func renderColumnList(listClass, emptyMessage string, items []ColumnItem) g.Node {
+func ColumnList(listClass, emptyMessage string, items []ColumnItem) g.Node {
 	if len(items) == 0 {
 		message := strings.TrimSpace(emptyMessage)
 		if message == "" {
@@ -79,7 +79,7 @@ func renderColumnList(listClass, emptyMessage string, items []ColumnItem) g.Node
 
 	rendered := make([]g.Node, 0, len(items))
 	for _, item := range items {
-		rendered = append(rendered, renderColumnListItem(item))
+		rendered = append(rendered, ColumnListItem(item))
 	}
 
 	return html.Ul(
@@ -88,7 +88,7 @@ func renderColumnList(listClass, emptyMessage string, items []ColumnItem) g.Node
 	)
 }
 
-func renderColumnListItem(item ColumnItem) g.Node {
+func ColumnListItem(item ColumnItem) g.Node {
 	if item.DisableWrapper {
 		if item.Nodes != nil {
 			return g.Group(item.Nodes)

@@ -5,17 +5,17 @@ import (
 	"strings"
 
 	"composer/internal/orchestrator"
-	"composer/pkg/ui/components"
-	dashboardpage "composer/internal/ui/pages/dashboard"
+	"composer/internal/ui/pages"
 	"composer/internal/ui/views"
 	"composer/internal/workflow"
+	"composer/pkg/ui/components"
 )
 
 func buildDashboardModel(
 	workflows []workflow.Workflow,
 	runs []workflow.RunState,
 	waitingTasks map[string][]orchestrator.WaitingTask,
-) dashboardpage.Props {
+) pages.DashboardProps {
 	workflowVMs := make([]views.WorkflowView, 0, len(workflows))
 	for _, wf := range workflows {
 		workflowVMs = append(workflowVMs, views.WorkflowView{
@@ -99,7 +99,7 @@ func buildDashboardModel(
 		return taskGroupVMs[i].RunDisplayName < taskGroupVMs[j].RunDisplayName
 	})
 
-	return dashboardpage.Props{
+	return pages.DashboardProps{
 		Sidebar: components.SidebarProps{
 			Title: "Composer",
 			Links: []components.SidebarLink{
@@ -124,12 +124,12 @@ func buildDashboardModel(
 			},
 			Workflows: workflowVMs,
 		},
-		WorkflowModal: dashboardpage.DefaultWorkflowModal(),
+		WorkflowModal: pages.DefaultWorkflowModal(),
 		RunColumn: views.RunColumnProps{
 			Title: "Runs",
 			Runs:  runVMs,
 		},
-		RunModal: dashboardpage.DefaultRunModal(),
+		RunModal: pages.DefaultRunModal(),
 		TaskColumn: views.WaitingColumnProps{
 			Title:  "Tasks",
 			Groups: taskGroupVMs,

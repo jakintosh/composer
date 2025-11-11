@@ -1,17 +1,17 @@
-package dashboard
+package pages
 
 import (
 	"path/filepath"
 	"testing"
 
-	"composer/pkg/ui/components"
-	"composer/internal/ui/testutil"
 	"composer/internal/ui/views"
+	"composer/pkg/ui/components"
+	"composer/pkg/ui/testutil"
 	"gotest.tools/v3/golden"
 )
 
 func TestRenderDashboardPage(t *testing.T) {
-	props := Props{
+	props := DashboardProps{
 		Sidebar: components.SidebarProps{
 			Title: "Composer",
 			Links: []components.SidebarLink{{Label: "Dashboard", Href: "/", Active: true}},
@@ -27,6 +27,6 @@ func TestRenderDashboardPage(t *testing.T) {
 		TaskColumn: views.WaitingColumnProps{Title: "Tasks"},
 	}
 
-	html := testutil.Render(t, Page(props))
+	html := testutil.Render(t, Dashboard(props))
 	golden.Assert(t, html, filepath.Join("fixtures", "dashboard.golden"))
 }
