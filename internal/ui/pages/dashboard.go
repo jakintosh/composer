@@ -73,10 +73,10 @@ func body(p DashboardProps) g.Node {
 					html.Div(
 						html.Class("panel-grid"),
 						views.WorkflowColumn(p.WorkflowColumn),
-						views.RunColumn(p.RunColumn),
+						p.RunColumn.Render(),
 						views.WaitingColumn(p.TaskColumn),
 					),
-					views.RunModal(p.RunModal),
+					p.RunModal.Render(),
 					views.WorkflowModal(p.WorkflowModal),
 				),
 			),

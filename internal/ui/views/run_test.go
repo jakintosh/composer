@@ -29,11 +29,11 @@ func TestRenderRunColumn(t *testing.T) {
 		},
 	}
 
-	html := testutil.Render(t, views.RunColumn(props))
+	html := testutil.Render(t, props.Render())
 	golden.Assert(t, html, "run_column.golden")
 }
 
 func TestRenderRunModal(t *testing.T) {
-	html := testutil.Render(t, views.RunModal(views.RunModalProps{}))
+	html := testutil.Render(t, views.RunModalProps{}.Render())
 	golden.Assert(t, html, "run_modal.golden")
 }

@@ -265,7 +265,7 @@
       const displayName = runNameInput.value;
       const generated = generateRunId(displayName);
       runIdInput.value = generated;
-      runIdPreview.textContent = generated || "—";
+      runIdPreview.value = generated;
     };
 
     const resetForm = () => {

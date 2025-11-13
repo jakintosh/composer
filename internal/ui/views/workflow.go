@@ -45,37 +45,33 @@ func workflowItems(workflows []WorkflowView) []components.ColumnItem {
 		workflow := wf
 		items = append(items, components.ColumnItem{
 			DisableWrapper: true,
-			Nodes: []g.Node{
-				components.Card(components.CardProps{
-					Title:        workflow.DisplayName,
-					SummaryItems: workflowSummaryItems(workflow),
-					Body:         workflowBody(workflow),
-				}),
-			},
+			Node: components.Card(components.CardProps{
+				Title:  workflow.DisplayName,
+				Body:   workflowBody(workflow),
+				Action: workflowActionButton(workflow),
+			}),
 		})
 	}
 	return items
 }
 
-func workflowSummaryItems(w WorkflowView) []g.Node {
+func workflowActionButton(w WorkflowView) *components.ButtonProps {
 	id := strings.TrimSpace(w.ID)
 	if id == "" {
 		return nil
 	}
 
 	label := fmt.Sprintf("Start run for workflow %s", strings.TrimSpace(w.DisplayName))
-	return []g.Node{
-		components.Button(components.ButtonProps{
-			Label:     "Run",
-			Class:     "button--accent button--sm",
-			HideIcon:  true,
-			AriaLabel: label,
-			Data: map[string]string{
-				"open-run-modal":   "",
-				"workflow-id":      id,
-				"workflow-display": w.DisplayName,
-			},
-		}),
+	return &components.ButtonProps{
+		Label:     "Run",
+		Class:     "button--accent button--sm",
+		HideIcon:  true,
+		AriaLabel: label,
+		Data: map[string]string{
+			"open-run-modal":   "",
+			"workflow-id":      id,
+			"workflow-display": w.DisplayName,
+		},
 	}
 }
 

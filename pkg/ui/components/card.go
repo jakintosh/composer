@@ -5,11 +5,12 @@ import (
 	"maragu.dev/gomponents/html"
 )
 
-// CardProps describes a collapsible card with optional summary items and body.
+// CardProps describes a collapsible card with optional status + action elements and body.
 type CardProps struct {
-	Title        string
-	SummaryItems []g.Node
-	Body         g.Node
+	Title  string
+	Status *StatusBadgeProps
+	Action *ButtonProps
+	Body   g.Node
 }
 
 // Card renders the collapsible card structure used throughout the dashboard.
@@ -20,8 +21,11 @@ func Card(p CardProps) g.Node {
 			g.Text(p.Title),
 		),
 	}
-	if len(p.SummaryItems) > 0 {
-		summary = append(summary, g.Group(p.SummaryItems))
+	if p.Status != nil {
+		summary = append(summary, StatusBadge(*p.Status))
+	}
+	if p.Action != nil {
+		summary = append(summary, Button(*p.Action))
 	}
 
 	var body g.Node = g.Group(nil)

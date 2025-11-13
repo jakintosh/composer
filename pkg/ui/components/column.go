@@ -29,7 +29,7 @@ type ColumnProps struct {
 type ColumnItem struct {
 	Class          string
 	DisableWrapper bool
-	Nodes          []g.Node
+	Node           g.Node
 }
 
 // ColumnSection renders the composed column with header + body list.
@@ -90,8 +90,8 @@ func ColumnList(listClass, emptyMessage string, items []ColumnItem) g.Node {
 
 func ColumnListItem(item ColumnItem) g.Node {
 	if item.DisableWrapper {
-		if item.Nodes != nil {
-			return g.Group(item.Nodes)
+		if item.Node != nil {
+			return item.Node
 		}
 		return g.Group(nil)
 	}
@@ -100,7 +100,9 @@ func ColumnListItem(item ColumnItem) g.Node {
 	if className := strings.TrimSpace(item.Class); className != "" {
 		attrs = append(attrs, html.Class(className))
 	}
-	attrs = append(attrs, g.Group(item.Nodes))
+	if item.Node != nil {
+		attrs = append(attrs, item.Node)
+	}
 	return html.Li(attrs...)
 }
 

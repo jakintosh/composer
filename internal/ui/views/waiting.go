@@ -52,7 +52,7 @@ func waitingItems(groups []WaitingGroup) []components.ColumnItem {
 		group := current
 		items = append(items, components.ColumnItem{
 			DisableWrapper: true,
-			Nodes: []g.Node{html.Li(
+			Node: html.Li(
 				html.Div(
 					html.Class("waiting-group__header"),
 					html.Span(g.Text(group.RunDisplayName)),
@@ -65,7 +65,7 @@ func waitingItems(groups []WaitingGroup) []components.ColumnItem {
 					html.Class("waiting-group__tasks"),
 					g.Group(waitingTasks(group.Tasks)),
 				),
-			)},
+			),
 		})
 	}
 
